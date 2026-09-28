@@ -25,7 +25,7 @@ class PenangananController extends Controller
      */
     public function index(Client $client)
     {
-        if (!in_array($client->status, ['assessment', 'penanganan'])) {
+        if ($client->is_archived || !in_array($client->status, ['assessment', 'penanganan'])) {
             return redirect()->route('clients.show', $client->id)
                               ->with('error', 'Client ini belum siap atau sudah selesai ditangani.');
         }
@@ -40,6 +40,12 @@ class PenangananController extends Controller
      */
     public function store(Request $request, Client $client)
     {
+        // A2: catatan tindakan hanya boleh ditambah saat klien sedang dalam penanganan dan belum diarsipkan.
+        if ($client->is_archived || ! in_array($client->status, [Client::STATUS_ASSESSMENT, Client::STATUS_PENANGANAN], true)) {
+            return redirect()->route('clients.show', $client->id)
+                ->with('error', 'Catatan tindakan tidak dapat ditambahkan: klien belum siap ditangani atau sudah diarsipkan.');
+        }
+
         $validated = $request->validate([
             'tanggal_tindakan' => 'required|date',
             'catatan_tindakan' => 'required|string',

@@ -29,6 +29,12 @@ class Client extends Model
         'is_archived',
         'archived_at',
         'archived_by',
+        // A5: kolom ini sebelumnya tidak ada di $fillable sehingga update() diam-diam membuangnya
+        'locked_at',
+        'rujukan',
+        'tanggal_keluar',
+        'no_hp_penanggung_jawab',
+        'status_akhir',
     ];
 
     protected function casts(): array
