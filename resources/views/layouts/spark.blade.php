@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>@yield('page-title', 'Dashboard') - Sistem PPKS</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="{{ asset('spark-admin/assets/images/favicon.ico') }}">
+
+  <!-- Local Third-Party Libraries (100% Offline Compatible) -->
+  <link rel="stylesheet" href="{{ asset('spark-admin/assets/libs/bootstrap/css/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ asset('spark-admin/assets/libs/bootstrap-icons/bootstrap-icons.css') }}">
+  <link rel="stylesheet" href="{{ asset('spark-admin/assets/libs/apexcharts/apexcharts.css') }}">
+  <link rel="stylesheet" href="{{ asset('spark-admin/assets/libs/flatpickr/flatpickr.min.css') }}">
+
+  <!-- Main Design System & Custom Stylesheet -->
+  <link rel="stylesheet" href="{{ asset('spark-admin/assets/css/main.css') }}">
+
+  <style>
+  .navbar-notif-badge {
+    position: absolute;
+    top: -4px;
+    right: -6px;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 3px;
+    font-size: 9px;
+    line-height: 15px;
+    font-weight: 600;
+    text-align: center;
+    color: #fff;
+    background-color: #dc3545;
+    border-radius: 50rem;
+    border: 1.5px solid #fff;
+  }
+</style>
+
+  {{-- Tempat untuk CSS tambahan khusus per halaman, kalau dibutuhkan --}}
+  @stack('styles')
+</head>
+
+<body>
+
+  <!-- ==========================================
+         Sidebar Component
+         ========================================== -->
+  <div class="sidebar-wrapper" id="sidebar">
+    <a href="{{ route('dashboard') }}" class="sidebar-brand">
+      <i class="bi bi-asterisk"></i>
+      <span>Sistem PPKS</span>
+    </a>
+
+    <div class="flex-grow-1 overflow-y-auto">
+      <div class="sidebar-menu-section">
+        <div class="sidebar-menu-title">Menu</div>
+        <ul class="sidebar-menu-list">
+          <li class="sidebar-menu-item">
+            <a href="{{ auth()->user()->hasRole('kepala-rps') ? route('statistik.index') : route('dashboard') }}"
+   class="sidebar-menu-link {{ request()->routeIs(['dashboard', 'statistik.index']) ? 'active' : '' }}">
+    <i class="bi bi-grid-fill"></i>
+    <span>Dashboard</span>
+</a>
+          </li>
+
+          @role('petugas-piket|peksos|admin-rps|kepala-rps')
+          <li class="sidebar-menu-item">
+            <a href="{{ route('clients.index') }}"
+               class="sidebar-menu-link {{ request()->routeIs('clients.index', 'clients.show') ? 'active' : '' }}">
+              <i class="bi bi-people"></i>
+              <span>Data Klien</span>
+            </a>
+          </li>
+          @endrole
+
+          @role('kepala-rps')
+          <li class="sidebar-menu-item">
+            <a href="{{ route('users.index') }}"
+               class="sidebar-menu-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
+              <i class="bi bi-person-gear"></i>
+              <span>Manajemen Pengguna</span>
+            </a>
+          </li>
+          @endrole
+
+          @role('petugas-piket')
+          <li class="sidebar-menu-item">
+            <a href="{{ route('clients.create') }}"
+               class="sidebar-menu-link {{ request()->routeIs('clients.create') ? 'active' : '' }}">
+              <i class="bi bi-person-plus"></i>
+              <span>Registrasi Klien</span>
+            </a>
+          </li>
+          @endrole
+
+          @role('peksos')
+          <li class="sidebar-menu-item">
+            <a href="{{ route('assessment.index') }}"
+               class="sidebar-menu-link {{ request()->routeIs('assessment.*') ? 'active' : '' }}">
+              <i class="bi bi-clipboard2-pulse"></i>
+              <span>Assessment</span>
+              @php($pendingAssessmentCount = \App\Models\Client::where('status', \App\Models\Client::STATUS_DRAFT)->count())
+              @if ($pendingAssessmentCount > 0)
+                <span class="badge bg-warning text-dark ms-auto">{{ $pendingAssessmentCount }}</span>
+              @endif
+            </a>
+          </li>
+          @endrole
+
+          @role('admin-rps')
+          <li class="sidebar-menu-item">
+            <a href="{{ route('penanganan.dashboard') }}"
+               class="sidebar-menu-link {{ request()->routeIs('penanganan.*') ? 'active' : '' }}">
+              <i class="bi bi-journal-text"></i>
+              <span>Penanganan</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="{{ route('exit-documents.mine') }}"
+               class="sidebar-menu-link {{ request()->routeIs('exit-documents.mine', 'exit-documents.edit', 'exit-documents.resubmit') ? 'active' : '' }}">
+              <i class="bi bi-file-earmark-check"></i>
+              <span>Surat Saya</span>
+            </a>
+          </li>
+          @endrole
+
+          @role('kepala-rps')
+          <li class="sidebar-menu-item">
+            <a href="{{ route('exit-documents.index') }}"
+               class="sidebar-menu-link {{ request()->routeIs('exit-documents.*') ? 'active' : '' }}">
+              <i class="bi bi-file-earmark-check"></i>
+              <span>Persetujuan Surat</span>
+            </a>
+          </li>
+          <li class="sidebar-menu-item">
+            <a href="{{ route('clients.index') }}"
+               class="sidebar-menu-link {{ request()->routeIs('clients.*') ? 'active' : '' }}">
+              <i class="bi bi-archive"></i>
+              <span>Arsip Klien</span>
+            </a>
+          </li>
+          @endrole
+        </ul>
+      </div>
+    </div>
+
+    <!-- Sidebar Profile Card -->
+    <div class="sidebar-profile">
+      <img src="{{ asset('spark-admin/assets/images/avatar.png') }}" alt="{{ auth()->user()->name }}"
+        class="sidebar-profile-img">
+      <div class="sidebar-profile-info">
+        <div class="sidebar-profile-name">{{ auth()->user()->name }}</div>
+        <div class="sidebar-profile-email">{{ auth()->user()->email }}</div>
+      </div>
+    </div>
+  </div>
+  <!-- END: Sidebar Component -->
+
+
+  <!-- ==========================================
+         Main Content Area
+         ========================================== -->
+  <div class="main-wrapper">
+
+    <!-- Top Navbar Component -->
+    <header class="navbar-custom">
+      <div class="navbar-left">
+        <button class="btn-desktop-toggle d-none d-xl-flex align-items-center justify-content-center me-3"
+          id="desktop-sidebar-toggle" aria-label="Minimize Sidebar">
+          <i class="bi bi-chevron-bar-left"></i>
+        </button>
+        <button class="sidebar-toggle-btn me-2" id="sidebar-toggle" aria-label="Toggle Navigation">
+          <i class="bi bi-list"></i>
+        </button>
+      </div>
+
+      <div class="navbar-search-wrapper">
+        <form action="{{ route('clients.index') }}" method="GET" class="d-flex w-100">
+          <input type="text" name="search" class="navbar-search-input" placeholder="Cari nama klien..."
+                 value="{{ request('search') }}" id="main-search">
+          <button type="submit" class="navbar-search-btn" aria-label="Cari">
+            <i class="bi bi-search"></i>
+          </button>
+        </form>
+      </div>
+
+      <div class="navbar-actions">
+        <div class="dropdown">
+    <button class="navbar-action-btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
+      aria-expanded="false" id="btn-notifications" data-bs-auto-close="outside">
+      <i class="bi bi-bell"></i>
+      @if (auth()->user()->unreadNotifications->count() > 0)
+        <span class="navbar-notif-badge">{{ auth()->user()->unreadNotifications->count() }}</span>
+      @endif
+    </button>
+    <div class="dropdown-menu dropdown-menu-end dropdown-menu-notification p-0"
+      aria-labelledby="btn-notifications">
+      <div class="notification-header">
+        <h6 class="notification-title">Notifikasi</h6>
+        @if (auth()->user()->unreadNotifications->count() > 0)
+          <form method="POST" action="{{ route('notifications.read-all') }}">
+            @csrf
+            <button class="btn-clear-all" type="submit">Tandai semua dibaca</button>
+          </form>
+        @endif
+      </div>
+      <div class="notification-list">
+        @forelse (auth()->user()->notifications->take(6) as $notif)
+          <a href="{{ route('notifications.click', $notif->id) }}" class="notification-item">
+            <div class="notification-icon bg-primary text-white">
+              <i class="bi bi-person-lines-fill"></i>
+            </div>
+            <div class="notification-content">
+              <p class="notification-text">{{ $notif->data['message'] }}</p>
+              <span class="notification-time">{{ $notif->created_at->diffForHumans() }}</span>
+            </div>
+            @if (is_null($notif->read_at))
+              <span class="notification-unread-dot"></span>
+            @endif
+          </a>
+        @empty
+          <div class="p-3 text-center text-muted small">Belum ada notifikasi.</div>
+        @endforelse
+      </div>
+    </div>
+  </div>
+        <!-- Profile Dropdown -->
+        <div class="dropdown ms-2">
+          <button class="navbar-profile-btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
+            aria-expanded="false" id="profile-dropdown">
+            <img src="{{ asset('spark-admin/assets/images/avatar.png') }}" alt="Profile" class="navbar-profile-img">
+            <span class="navbar-profile-name d-none d-md-inline">{{ auth()->user()->name }}</span>
+            <i class="bi bi-chevron-down navbar-profile-caret"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-profile" aria-labelledby="profile-dropdown">
+            <li class="dropdown-header">Welcome, {{ auth()->user()->name }} !</li>
+            <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="bi bi-person"></i> Akun Saya</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="dropdown-item text-danger">
+                  <i class="bi bi-box-arrow-right"></i> Keluar
+                </button>
+              </form>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </header>
+    <!-- END: Top Navbar Component -->
+
+    <!-- Page Header Banner -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">@yield('page-title', 'Dashboard')</h1>
+        <p class="page-subtitle">@yield('page-subtitle', '')</p>
+      </div>
+    </div>
+    <!-- END: Page Header Banner -->
+
+    {{-- Notifikasi sukses/gagal, tampil di semua halaman yang pakai layout ini --}}
+    @if (session('success'))
+      <div class="alert alert-success mb-4">{{ session('success') }}</div>
+    @endif
+    
+    @if (session('error'))
+  <div class="alert alert-danger mb-4">{{ session('error') }}</div>
+@endif
+
+
+    @if ($errors->any())
+      <div class="alert alert-danger mb-4">
+        <ul class="mb-0">
+          @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+          @endforeach
+        </ul>
+      </div>
+    @endif
+
+    {{-- Konten setiap halaman ditaruh di sini --}}
+    @yield('content')
+
+    <!-- Footer Component -->
+    <footer class="footer-custom">
+      <div class="footer-left">
+        <span class="footer-logo"><i class="bi bi-asterisk"></i> Sistem PPKS</span>
+      </div>
+    </footer>
+    <!-- END: Footer Component -->
+
+  </div>
+  <!-- END: Main Content Area -->
+
+  <!-- Local Third-Party Libraries Script dependencies -->
+  <script src="{{ asset('spark-admin/assets/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ asset('spark-admin/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
+  <script src="{{ asset('spark-admin/assets/libs/flatpickr/flatpickr.min.js') }}"></script>
+  <script src="{{ asset('spark-admin/assets/js/dashboard.js') }}"></script>
+
+  {{-- Tempat untuk JS tambahan khusus per halaman --}}
+  @stack('scripts')
+</body>
+
+</html>

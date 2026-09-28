@@ -1,0 +1,70 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Client;
+use App\Models\ClientFollowup;
+use Illuminate\Http\Request;
+
+class PenangananController extends Controller
+{
+    /**
+     * Menampilkan client yang siap atau sedang dalam penanganan.
+     */
+    public function dashboard()
+    {
+        $clients = Client::whereIn('status', ['assessment', 'penanganan'])
+            ->latest()
+            ->paginate(10);
+
+        return view('penanganan.dashboard', compact('clients'));
+    }
+
+    /**
+     * Menampilkan halaman penanganan: riwayat tindakan + form tambah + form tutup kasus
+     */
+    public function index(Client $client)
+    {
+        if (!in_array($client->status, ['assessment', 'penanganan'])) {
+            return redirect()->route('clients.show', $client->id)
+                              ->with('error', 'Client ini belum siap atau sudah selesai ditangani.');
+        }
+
+        $followups = $client->followups;
+
+        return view('penanganan.index', compact('client', 'followups'));
+    }
+
+    /**
+     * Menyimpan satu catatan tindakan harian
+     */
+    public function store(Request $request, Client $client)
+    {
+        $validated = $request->validate([
+            'tanggal_tindakan' => 'required|date',
+            'catatan_tindakan' => 'required|string',
+        ]);
+
+        $validated['client_id'] = $client->id;
+        $validated['user_id'] = auth()->id();
+
+        ClientFollowup::create($validated);
+
+        // Begitu ada tindakan pertama, naikkan status ke 'penanganan'
+        if ($client->status === 'assessment') {
+            $client->update(['status' => 'penanganan']);
+        }
+
+        return redirect()->route('penanganan.index', $client->id)
+                          ->with('success', 'Catatan tindakan berhasil ditambahkan.');
+    }
+
+    /**
+     * Penutupan kasus dilakukan setelah surat disetujui Kepala RPS.
+     */
+    public function tutupKasus(Request $request, Client $client)
+    {
+        return redirect()->route('penanganan.index', $client)
+            ->with('error', 'Penutupan kasus dilakukan melalui pengajuan surat dan persetujuan Kepala RPS.');
+    }
+}
