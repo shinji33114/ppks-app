@@ -47,7 +47,6 @@ Route::middleware(['auth', 'role:admin-rps'])->group(function () {
     Route::get('/penanganan', [PenangananController::class, 'dashboard'])->name('penanganan.dashboard');
     Route::get('/clients/{client}/penanganan', [PenangananController::class, 'index'])->name('penanganan.index');
     Route::post('/clients/{client}/penanganan', [PenangananController::class, 'store'])->name('penanganan.store');
-    Route::post('/clients/{client}/penanganan/tutup', [PenangananController::class, 'tutupKasus'])->name('penanganan.tutup');
     Route::post('/clients/{client}/exit-document', [ClientExitDocumentController::class, 'store'])
         ->name('exit-documents.store');
     Route::get('/exit-documents/mine', [ClientExitDocumentController::class, 'mine'])
@@ -80,6 +79,8 @@ Route::middleware(['auth', 'role:peksos'])->group(function () {
     Route::get('/assessment', [AssessmentController::class, 'index'])->name('assessment.index');
     Route::get('/clients/{client}/assessment', [AssessmentController::class, 'create'])->name('assessment.create');
     Route::post('/clients/{client}/assessment', [AssessmentController::class, 'store'])->name('assessment.store');
+    Route::get('/clients/{client}/assessment/edit', [AssessmentController::class, 'edit'])->name('assessment.edit');
+    Route::put('/clients/{client}/assessment', [AssessmentController::class, 'update'])->name('assessment.update');
 });
 
 Route::get('/', function () {

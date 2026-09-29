@@ -65,12 +65,4 @@ class PenangananController extends Controller
                           ->with('success', 'Catatan tindakan berhasil ditambahkan.');
     }
 
-    /**
-     * Penutupan kasus dilakukan setelah surat disetujui Kepala RPS.
-     */
-    public function tutupKasus(Request $request, Client $client)
-    {
-        return redirect()->route('penanganan.index', $client)
-            ->with('error', 'Penutupan kasus dilakukan melalui pengajuan surat dan persetujuan Kepala RPS.');
-    }
 }

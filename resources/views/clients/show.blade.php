@@ -23,12 +23,12 @@
             <span class="badge-table {{ $client->status_badge_class }} d-inline-block mb-3">{{ $client->status_label }}</span>
 
             @role('peksos')
-                @if ($client->status === 'draft')
-                    <a href="{{ route('assessment.create', $client->id) }}" class="btn-custom btn-custom-primary w-100">
-                        <i class="bi bi-arrow-right-circle me-1"></i> Lanjutkan ke Assessment
-                    </a>
-                @endif
-            @endrole
+        @if ($client->status === 'assessment' && ! $client->is_archived)
+            <a href="{{ route('assessment.edit', $client->id) }}" class="btn-custom btn-custom-primary w-100">
+                <i class="bi bi-pencil-square me-1"></i> Edit Assessment
+            </a>
+        @endif
+    @endrole
 
             @role('petugas-piket')
                 @if ($client->status === 'draft' && $client->locked_at === null && $client->created_at->addDay()->isFuture())

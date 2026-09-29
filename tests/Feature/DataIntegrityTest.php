@@ -13,6 +13,7 @@ beforeEach(function () {
 
 function makeUser(string $role, array $attrs = []): User
 {
+    // is_active diisi eksplisit: default true hanya ada di database, tidak di objek model yang baru dibuat
     $user = User::factory()->create(array_merge(['is_active' => true], $attrs));
     $user->assignRole($role);
 
@@ -166,4 +167,56 @@ it('A5: persetujuan surat menyimpan rujukan, tanggal keluar, dan no HP ke klien'
         ->and($client->no_hp_penanggung_jawab)->toBe('081234567890')
         ->and($client->status_akhir)->toBe('dirujuk')
         ->and($client->is_archived)->toBeTrue();
+});
+
+// ---------------------------------------------------------------- B1
+function b1Fields(): array
+{
+    return [
+        'detail_alamat_pengakuan' => 'Jl. Mawar RT 02/RW 05, dekat pasar',
+        'status_pendidikan' => 'Putus Sekolah',
+        'kategori_umur' => 'remaja',
+        'masalah_sekolah' => 'Sering membolos.',
+        'masalah_sosial' => 'Dijauhi teman sebaya.',
+        'cara_pandang_klien' => 'Merasa tidak ada jalan keluar.',
+        'rencana_kedepan' => 'Ingin kembali bersekolah.',
+        'cara_komunikasi' => 'Kooperatif',
+        'arus_percakapan' => 'Lancar',
+        'ingatan' => 'Baik',
+        'arah_perilaku' => 'Terarah',
+    ];
+}
+
+it('B1: form assessment menampilkan 11 field baru', function () {
+    $peksos = makeUser('peksos');
+    $client = makeClient();
+
+    $response = $this->actingAs($peksos)->get(route('assessment.create', $client))->assertOk();
+
+    foreach (array_keys(b1Fields()) as $name) {
+        $response->assertSee('name="'.$name.'"', false);
+    }
+});
+
+it('B1: 11 field baru tersimpan ke client_assessments', function () {
+    $peksos = makeUser('peksos');
+    $client = makeClient();
+
+    $this->actingAs($peksos)
+        ->post(route('assessment.store', $client), assessmentPayload(b1Fields()))
+        ->assertSessionHasNoErrors();
+
+    $assessment = ClientAssessment::firstOrFail();
+    foreach (b1Fields() as $column => $value) {
+        expect($assessment->{$column})->toBe($value);
+    }
+});
+
+it('B1: kategori umur di luar pilihan ditolak', function () {
+    $peksos = makeUser('peksos');
+    $client = makeClient();
+
+    $this->actingAs($peksos)
+        ->post(route('assessment.store', $client), assessmentPayload(['kategori_umur' => 'raksasa']))
+        ->assertSessionHasErrors('kategori_umur');
 });
