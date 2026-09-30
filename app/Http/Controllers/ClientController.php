@@ -63,10 +63,10 @@ class ClientController extends Controller
     'data_dukung'     => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
 ]);
 
-        $validated['foto_klien'] = $request->file('foto_klien')->store('client-photos', 'public');
+        $validated['foto_klien'] = $request->file('foto_klien')->store('client-photos', 'local');
 
         if ($request->hasFile('data_dukung')) {
-            $validated['data_dukung'] = $request->file('data_dukung')->store('client-documents', 'public');
+            $validated['data_dukung'] = $request->file('data_dukung')->store('client-documents', 'local');
         }
 
         if (empty($validated['nama_lengkap'])) {
@@ -119,10 +119,16 @@ if ($request->hasFile('data_dukung')) {
      */
     public function show(Client $client)
     {
-        if ($client->is_archived || in_array($client->status, [Client::STATUS_SELESAI, Client::STATUS_DIRUJUK], true)) {
-            abort_unless(auth()->user()->hasRole('kepala-rps'), 403);
+        // D4/D5: klien yang sudah diarsipkan (Selesai/Dirujuk) boleh dilihat READ-ONLY oleh
+        // kepala-rps, admin-rps, dan peksos. Petugas Piket tetap tidak boleh, karena kasus itu
+        // sudah di luar wewenangnya sesuai tabel role di dokumen.
+        $isClosedCase = $client->is_archived
+            || in_array($client->status, [Client::STATUS_SELESAI, Client::STATUS_DIRUJUK], true);
+
+        if ($isClosedCase) {
+            abort_unless(auth()->user()->hasAnyRole(['kepala-rps', 'admin-rps', 'peksos']), 403);
         }
 
-        return view('clients.show', compact('client'));
+        return view('clients.show', compact('client', 'isClosedCase'));
     }
 }

@@ -49,15 +49,16 @@ class Client extends Model
     }
 
     public function getStatusLabelAttribute(): string
-    {
-        return [
-            self::STATUS_DRAFT => 'Terregistrasi / Menunggu Assessment',
-            self::STATUS_ASSESSMENT => 'Siap Ditangani',
-            self::STATUS_PENANGANAN => 'Sedang Ditangani',
-            self::STATUS_SELESAI => 'Selesai',
-            self::STATUS_DIRUJUK => 'Dirujuk',
-        ][$this->status] ?? $this->status;
-    }
+{
+    // C3: nama status disamakan persis dengan diagram alur di dokumen panduan.
+    return [
+        self::STATUS_DRAFT => 'Draft / Diterima',
+        self::STATUS_ASSESSMENT => 'Proses Assessment',
+        self::STATUS_PENANGANAN => 'Dalam Penanganan',
+        self::STATUS_SELESAI => 'Selesai',
+        self::STATUS_DIRUJUK => 'Dirujuk',
+    ][$this->status] ?? $this->status;
+}
 
     public function getStatusBadgeClassAttribute(): string
     {
