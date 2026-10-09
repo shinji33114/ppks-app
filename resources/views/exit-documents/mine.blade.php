@@ -19,9 +19,12 @@
                             <td>{{ $document->tujuan }}</td>
                             <td>{{ str_replace('_', ' ', ucfirst($document->status)) }}</td>
                             <td>
+                                @if ($document->status === 'disetujui' && $document->pdf_path)
+                                    <a href="{{ route('exit-documents.pdf', ['document' => $document->id, 'v' => $document->updated_at->timestamp]) }}" class="btn btn-sm btn-outline-primary">Unduh PDF</a>
+                                @endif
                                 @if ($document->status === 'ditolak')
                                     <a href="{{ route('exit-documents.edit', $document) }}" class="btn btn-sm btn-warning">Perbaiki</a>
-                                @else
+                                @elseif ($document->status !== 'disetujui' || ! $document->pdf_path)
                                     <span class="text-muted">-</span>
                                 @endif
                             </td>

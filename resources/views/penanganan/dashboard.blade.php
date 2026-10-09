@@ -25,7 +25,7 @@
                     <tr>
                         <td>{{ $loop->iteration + ($clients->currentPage() - 1) * $clients->perPage() }}</td>
                         <td>{{ $client->nama_lengkap }}</td>
-                        <td>{{ \Carbon\Carbon::parse($client->tanggal_masuk)->format('d M Y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($client->tanggal_masuk)->translatedFormat('d M Y') }}</td>
                         <td>
                             <span class="badge-table pending">
                                 {{ $client->status_label }}

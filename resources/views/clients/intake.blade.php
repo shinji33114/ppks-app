@@ -8,7 +8,11 @@
     <div class="col-lg-8">
         <div class="card border-light shadow-sm p-4">
 
-            <h5 class="card-title mb-4">Form Registrasi Awal (Tahap 1)</h5>
+            <h5 class="card-title mb-3">Form Registrasi Awal (Tahap 1)</h5>
+
+            <div class="alert alert-info small mb-4">
+                Semua kolom wajib diisi. Jika data memang tidak ada, isi dengan tanda <strong>-</strong>.
+            </div>
 
             <form method="POST" action="{{ route('clients.store') }}" enctype="multipart/form-data">
                 @csrf
@@ -52,40 +56,48 @@
                     <input type="text" name="nama_lengkap" id="nama_lengkap"
                            value="{{ old('nama_lengkap') }}"
                            class="form-control-custom"
-                           placeholder="Kosongkan jika belum diketahui (akan diisi 'Tanpa Nama / X')">
+                           placeholder="Isi - jika belum diketahui (akan tercatat 'Tanpa Nama / X')"
+                           required>
                 </div>
 
                 <div class="mb-3">
-    <label class="form-label-custom">Kondisi Fisik & Penampilan (opsional)</label>
-    <textarea name="kondisi_fisik" rows="2" class="form-control-custom"
-              placeholder="Contoh: Tampak kurus, ada luka lecet di lengan">{{ old('kondisi_fisik') }}</textarea>
+    <label class="form-label-custom">Kondisi Fisik & Penampilan</label>
+    <textarea name="kondisi_fisik" rows="2" class="form-control-custom" required
+              placeholder="Contoh: Tampak kurus, ada luka lecet di lengan. Isi - jika tidak ada">{{ old('kondisi_fisik') }}</textarea>
 </div>
 
 <div class="mb-3">
-    <label class="form-label-custom">Nama Alias (opsional)</label>
-    <input type="text" name="nama_alias" value="{{ old('nama_alias') }}" class="form-control-custom"
-           placeholder="Nama panggilan lain, jika ada">
+    <label class="form-label-custom">Nama Alias</label>
+    <input type="text" name="nama_alias" value="{{ old('nama_alias') }}" class="form-control-custom" required
+           placeholder="Nama panggilan lain. Isi - jika tidak ada">
 </div>
 
 <div class="mb-3">
-    <label class="form-label-custom">Data Dukung (opsional)</label>
-    <input type="file" name="data_dukung" class="form-control-custom" accept=".pdf,.jpg,.jpeg,.png">
+    <label class="form-label-custom">Data Dukung</label>
+    <input type="file" name="data_dukung" id="data_dukung" class="form-control-custom" accept=".pdf,.jpg,.jpeg,.png">
     <div class="text-muted small mt-1">KTP, KK, surat pengantar, atau dokumen identitas lain (PDF/gambar, maks 10MB)</div>
+    <div class="form-check mt-2">
+        <input class="form-check-input" type="checkbox" name="tanpa_data_dukung" id="tanpa_data_dukung" value="1"
+               @checked(old('tanpa_data_dukung'))>
+        <label class="form-check-label small" for="tanpa_data_dukung">Tidak ada data dukung (-)</label>
+    </div>
 </div>
                 
                <div class="mb-3">
-    <label for="problem_awal" class="form-label-custom">Kategori PPKS (opsional)</label>
-    <select name="problem_awal" id="problem_awal" class="form-control-custom">
-        <option value="">- Belum diketahui / isi nanti -</option>
-        <option value="Lansia Terlantar" @selected(old('problem_awal') == 'Lansia Terlantar')>Lansia Terlantar</option>
-        <option value="Anak Jalanan" @selected(old('problem_awal') == 'Anak Jalanan')>Anak Jalanan</option>
-        <option value="Anak Terlantar" @selected(old('problem_awal') == 'Anak Terlantar')>Anak Terlantar</option>
-        <option value="Disabilitas Terlantar" @selected(old('problem_awal') == 'Disabilitas Terlantar')>Disabilitas Terlantar</option>
-        <option value="Korban Kekerasan" @selected(old('problem_awal') == 'Korban Kekerasan')>Korban Kekerasan</option>
-        <option value="Gelandangan / Pengemis" @selected(old('problem_awal') == 'Gelandangan / Pengemis')>Gelandangan / Pengemis</option>
-        <option value="ODGJ Terlantar" @selected(old('problem_awal') == 'ODGJ Terlantar')>Orang Dengan Gangguan Jiwa (ODGJ) Terlantar</option>
-        <option value="Lainnya" @selected(old('problem_awal') == 'Lainnya')>Lainnya</option>
+    <label for="kategori_ppks" class="form-label-custom">Kategori PPKS</label>
+    <select name="kategori_ppks" id="kategori_ppks" class="form-control-custom" required>
+        <option value="">- Pilih -</option>
+        <option value="-" @selected(old('kategori_ppks') === '-')>- Tidak diketahui -</option>
+        @foreach (\App\Models\Client::KATEGORI_PPKS as $kategori)
+            <option value="{{ $kategori }}" @selected(old('kategori_ppks') == $kategori)>{{ $kategori }}</option>
+        @endforeach
     </select>
+</div>
+
+<div class="mb-3">
+    <label for="problem_awal" class="form-label-custom">Problem Awal / Bentuk Pelanggaran</label>
+    <textarea name="problem_awal" id="problem_awal" rows="2" class="form-control-custom" required
+              placeholder="Uraikan singkat problem awal atau bentuk pelanggaran yang dialami klien. Isi - jika tidak ada">{{ old('problem_awal') }}</textarea>
 </div>
 
                 <div class="mb-4">
@@ -109,8 +121,9 @@
         <div class="card border-light shadow-sm p-4">
             <h6 class="card-title mb-3"><i class="bi bi-info-circle me-1"></i> Panduan Tahap 1</h6>
             <ul class="ps-3 mb-0" style="font-size: 0.875rem; line-height: 1.8;">
-                <li>Field wajib: tanggal masuk, sumber aduan, kronologi, nama (atau Tanpa Nama / X), dan foto klien.</li>
-                <li>Nama boleh dikosongkan jika identitas klien belum diketahui.</li>
+                <li>Semua kolom wajib diisi. Jika datanya tidak ada, isi dengan tanda <strong>-</strong>.</li>
+                <li>Nama diisi <strong>-</strong> jika identitas klien belum diketahui (akan tercatat "Tanpa Nama / X").</li>
+                <li>Foto klien wajib diunggah. Data dukung wajib diunggah, atau centang "Tidak ada data dukung".</li>
                 <li>Setelah disimpan, Peksos akan otomatis mendapat notifikasi untuk melanjutkan ke tahap Assessment.</li>
                 <li>Data ini akan terkunci begitu Peksos mulai mengisi Tahap 2.</li>
             </ul>
@@ -118,3 +131,20 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const cb = document.getElementById('tanpa_data_dukung');
+    const file = document.getElementById('data_dukung');
+    if (!cb || !file) return;
+    const sync = () => {
+        file.disabled = cb.checked;
+        file.required = !cb.checked;
+        if (cb.checked) file.value = '';
+    };
+    cb.addEventListener('change', sync);
+    sync();
+});
+</script>
+@endpush

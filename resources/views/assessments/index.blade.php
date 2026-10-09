@@ -25,7 +25,7 @@
                     <tr>
                         <td>{{ $loop->iteration + ($clients->currentPage() - 1) * $clients->perPage() }}</td>
                         <td>{{ $client->nama_lengkap }}</td>
-                        <td>{{ \Carbon\Carbon::parse($client->tanggal_masuk)->format('d M Y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($client->tanggal_masuk)->translatedFormat('d M Y') }}</td>
                         <td>{{ $client->sumber_aduan }}</td>
                         <td>
                             <a href="{{ route('assessment.create', $client->id) }}"

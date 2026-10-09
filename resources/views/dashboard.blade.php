@@ -1,7 +1,7 @@
 @extends('layouts.spark')
 
 @section('page-title', 'Dashboard')
-@section('page-subtitle', 'Selamat datang di Sistem Pelayanan PPKS')
+@section('page-subtitle', 'Ringkasan pekerjaan Anda hari ini')
 
 @section('content')
 <div class="row g-4">
@@ -10,8 +10,16 @@
             <h2 class="card-title mb-2">Selamat datang, {{ auth()->user()->name }}</h2>
             <p class="mb-0">
                 Anda login sebagai:
+                @php
+                    $roleLabels = [
+                        'petugas-piket' => 'Petugas Piket / Front Office',
+                        'peksos' => 'Pekerja Sosial',
+                        'admin-rps' => 'Admin Penanganan / RPS',
+                        'kepala-rps' => 'Kepala RPS',
+                    ];
+                @endphp
                 @foreach (auth()->user()->getRoleNames() as $role)
-                    <span class="badge bg-success">{{ $role }}</span>
+                    <span class="badge bg-success">{{ $roleLabels[$role] ?? $role }}</span>
                 @endforeach
             </p>
         </div>
@@ -64,5 +72,10 @@
             </div>
         </div>
     @endrole
+
+  {{-- SOP ditampilkan di dashboard Petugas Piket, Peksos, dan Admin RPS saja --}}
+   @hasanyrole('petugas-piket|peksos|admin-rps')
+       @include('partials.sop-dashboard')
+   @endhasanyrole
 </div>
 @endsection

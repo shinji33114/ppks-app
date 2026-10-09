@@ -1,13 +1,13 @@
 @extends('layouts.spark')
 
-@section('page-title', 'Daftar Klien')
+@section('page-title', 'Data Klien')
 @section('page-subtitle', 'Semua klien yang tercatat dalam sistem')
 
 @section('content')
 <div class="table-card-custom">
 
     <div class="table-header-control">
-        <h5 class="card-title mb-0">Data Klien</h5>
+        <h5 class="card-title mb-0">Daftar Klien</h5>
 
         @role('petugas-piket')
         <a href="{{ route('clients.create') }}" class="btn-custom btn-custom-primary">
@@ -36,11 +36,13 @@
                             <div class="table-user-cell">
                                 <div>
                                     <div class="table-user-name">{{ $client->nama_lengkap }}</div>
-                                    <div class="table-user-sub">{{ $client->sumber_aduan }}</div>
+                                    @if ($client->nama_alias)
+                                        <div class="table-user-sub">alias {{ $client->nama_alias }}</div>
+                                    @endif
                                 </div>
                             </div>
                         </td>
-                        <td>{{ \Carbon\Carbon::parse($client->tanggal_masuk)->format('d M Y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($client->tanggal_masuk)->translatedFormat('d M Y') }}</td>
                         <td>{{ $client->sumber_aduan }}</td>
                         <td>
                             <span class="badge-table {{ $client->status_badge_class }}">{{ $client->status_label }}</span>

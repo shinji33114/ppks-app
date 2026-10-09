@@ -6,6 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class ClientAssessment extends Model
 {
+    /** Pilihan status perkawinan pada assessment. */
+    public const STATUS_PERKAWINAN = [
+        'Belum menikah',
+        'Menikah',
+        'Cerai hidup',
+        'Cerai mati',
+    ];
+
     /** Pilihan Kategori Umur (field 34). Rentang usia tiap kategori ditentukan oleh instansi. */
     public const KATEGORI_UMUR = [
         'balita' => 'Balita',
@@ -13,6 +21,18 @@ class ClientAssessment extends Model
         'remaja' => 'Remaja',
         'dewasa' => 'Dewasa',
         'lansia' => 'Lansia',
+    ];
+
+    /** Pilihan Pendidikan Terakhir: jenjang tertinggi yang telah ditamatkan. */
+    public const PENDIDIKAN_TERAKHIR = [
+        'Tidak Sekolah',
+        'Tidak Tamat SD',
+        'SD / Sederajat',
+        'SMP / Sederajat',
+        'SMA / Sederajat',
+        'Diploma (D1-D3)',
+        'Sarjana (S1 / D4)',
+        'Pascasarjana (S2 / S3)',
     ];
 
    protected $fillable = [
@@ -28,6 +48,11 @@ class ClientAssessment extends Model
         'orientasi_realita', 'catatan_observasi',
         'simpulan_awal', 'rekomendasi_penanganan',
     ];
+
+    protected function casts(): array
+    {
+        return ['tanggal_lahir' => 'date'];
+    }
 
     public function client()
     {

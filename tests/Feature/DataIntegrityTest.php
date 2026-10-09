@@ -34,11 +34,8 @@ function makeClient(array $attrs = []): Client
 
 function assessmentPayload(array $override = []): array
 {
-    return array_merge([
-        'riwayat_masalah' => 'Riwayat singkat.',
-        'simpulan_awal' => 'Simpulan awal.',
-        'rekomendasi_penanganan' => 'Pembinaan lanjutan.',
-    ], $override);
+    // Semua field assessment wajib diisi; payload lengkap ada di tests/Pest.php.
+    return payloadAssessmentLengkap($override);
 }
 
 // ---------------------------------------------------------------- A1

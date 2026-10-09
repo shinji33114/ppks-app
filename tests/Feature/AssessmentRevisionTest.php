@@ -3,6 +3,7 @@
 use App\Models\Client;
 use App\Models\ClientAssessment;
 use App\Models\User;
+use App\Notifications\AssessmentSelesai;
 use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Role;
 
@@ -34,17 +35,49 @@ function revClient(array $attrs = []): Client
 }
 
 // ---------------------------------------------------------------- B3
-it('B3: assessment berhasil hanya dengan simpulan awal', function () {
+it('B3: assessment ditolak bila ada field yang kosong', function () {
     $peksos = revUser('peksos');
     $client = revClient();
 
     $this->actingAs($peksos)
         ->post(route('assessment.store', $client), ['simpulan_awal' => 'Simpulan awal.'])
+        ->assertSessionHasErrors(['nik', 'tanggal_lahir', 'umur', 'jenis_kelamin', 'riwayat_masalah', 'rekomendasi_penanganan']);
+
+    expect(ClientAssessment::count())->toBe(0)
+        ->and($client->refresh()->status)->toBe(Client::STATUS_DRAFT);
+});
+
+it('B3: assessment berhasil bila data yang tidak ada diisi tanda "-"', function () {
+    $peksos = revUser('peksos');
+    $admin = revUser('admin-rps');
+    $client = revClient();
+
+    $semuaStrip = array_merge(
+        array_map(fn () => '-', payloadAssessmentLengkap()),
+        ['status_perkawinan' => 'Belum menikah'],
+    );
+
+    $this->actingAs($peksos)
+        ->post(route('assessment.store', $client), $semuaStrip)
         ->assertSessionHasNoErrors();
 
+    $assessment = ClientAssessment::firstOrFail();
+
+    // Field bertipe (NIK, tanggal, angka, pilihan) disimpan NULL; field teks disimpan "-".
     expect($client->refresh()->status)->toBe(Client::STATUS_ASSESSMENT)
-        ->and(ClientAssessment::count())->toBe(1)
-        ->and(ClientAssessment::first()->riwayat_masalah)->toBeNull();
+        ->and($client->nama_lengkap)->toBe('Klien Uji') // nama "-" tidak menimpa nama yang sudah ada
+        ->and($assessment->nik)->toBeNull()
+        ->and($assessment->tanggal_lahir)->toBeNull()
+        ->and($assessment->umur)->toBeNull()
+        ->and($assessment->jenis_kelamin)->toBeNull()
+        ->and($assessment->kategori_umur)->toBeNull()
+        ->and($assessment->riwayat_masalah)->toBe('-')
+        ->and($assessment->simpulan_awal)->toBe('-');
+
+    $notification = $admin->notifications()->firstOrFail();
+    expect($notification->type)->toBe(AssessmentSelesai::class)
+        ->and($notification->data['client_id'])->toBe($client->id)
+        ->and($notification->data['url'])->toBe(route('clients.show', $client));
 });
 
 it('B3: simpulan awal tetap wajib', function () {
@@ -52,11 +85,48 @@ it('B3: simpulan awal tetap wajib', function () {
     $client = revClient();
 
     $this->actingAs($peksos)
-        ->post(route('assessment.store', $client), ['riwayat_masalah' => 'Ada, tapi tanpa simpulan.'])
+        ->post(route('assessment.store', $client), payloadAssessmentLengkap(['simpulan_awal' => '']))
         ->assertSessionHasErrors('simpulan_awal');
 
     expect(ClientAssessment::count())->toBe(0)
         ->and($client->refresh()->status)->toBe(Client::STATUS_DRAFT);
+});
+
+it('rejects an NIK already used by another assessment but allows keeping its own NIK on edit', function () {
+    $peksos = revUser('peksos');
+    $firstClient = revClient();
+    $secondClient = revClient(['nama_lengkap' => 'Klien Kedua']);
+    $nik = '3578012345678901';
+
+    $this->actingAs($peksos)
+        ->post(route('assessment.store', $firstClient), payloadAssessmentLengkap(['simpulan_awal' => 'Simpulan pertama.', 'nik' => $nik]))
+        ->assertSessionHasNoErrors();
+
+    $this->actingAs($peksos)
+        ->post(route('assessment.store', $secondClient), payloadAssessmentLengkap(['simpulan_awal' => 'Simpulan kedua.', 'nik' => $nik]))
+        ->assertSessionHasErrors('nik');
+
+    $this->actingAs($peksos)
+        ->put(route('assessment.update', $firstClient), payloadAssessmentLengkap(['simpulan_awal' => 'Simpulan diperbarui.', 'nik' => $nik]))
+        ->assertSessionHasNoErrors();
+
+    expect(ClientAssessment::count())->toBe(1)
+        ->and($secondClient->refresh()->status)->toBe(Client::STATUS_DRAFT);
+});
+
+it('mengizinkan NIK "-" pada banyak klien karena disimpan NULL', function () {
+    $peksos = revUser('peksos');
+    $firstClient = revClient();
+    $secondClient = revClient(['nama_lengkap' => 'Klien Kedua']);
+
+    foreach ([$firstClient, $secondClient] as $client) {
+        $this->actingAs($peksos)
+            ->post(route('assessment.store', $client), payloadAssessmentLengkap(['nik' => '-']))
+            ->assertSessionHasNoErrors();
+    }
+
+    expect(ClientAssessment::count())->toBe(2)
+        ->and(ClientAssessment::whereNull('nik')->count())->toBe(2);
 });
 
 // ---------------------------------------------------------------- B2
@@ -64,12 +134,11 @@ it('B2: umur, kondisi ekonomi, dan masalah keluarga tersimpan', function () {
     $peksos = revUser('peksos');
     $client = revClient();
 
-    $this->actingAs($peksos)->post(route('assessment.store', $client), [
-        'simpulan_awal' => 'Simpulan awal.',
+    $this->actingAs($peksos)->post(route('assessment.store', $client), payloadAssessmentLengkap([
         'umur' => 15,
         'kondisi_ekonomi' => 'Penghasilan keluarga tidak tetap.',
         'masalah_keluarga' => 'Sering terjadi pertengkaran.',
-    ])->assertSessionHasNoErrors();
+    ]))->assertSessionHasNoErrors();
 
     $assessment = ClientAssessment::firstOrFail();
     expect((int) $assessment->umur)->toBe(15)
@@ -82,7 +151,7 @@ it('B2: umur di luar rentang ditolak', function () {
     $client = revClient();
 
     $this->actingAs($peksos)
-        ->post(route('assessment.store', $client), ['simpulan_awal' => 'Ok.', 'umur' => 200])
+        ->post(route('assessment.store', $client), payloadAssessmentLengkap(['umur' => 200]))
         ->assertSessionHasErrors('umur');
 });
 
@@ -91,22 +160,24 @@ it('C1: Peksos dapat memperbarui nama lengkap klien', function () {
     $peksos = revUser('peksos');
     $client = revClient(['nama_lengkap' => 'Tanpa Nama / X']);
 
-    $this->actingAs($peksos)->post(route('assessment.store', $client), [
-        'simpulan_awal' => 'Simpulan awal.',
+    $this->actingAs($peksos)->post(route('assessment.store', $client), payloadAssessmentLengkap([
         'nama_lengkap' => 'Budi Santoso',
-    ])->assertSessionHasNoErrors();
+    ]))->assertSessionHasNoErrors();
 
     expect($client->refresh()->nama_lengkap)->toBe('Budi Santoso');
 });
 
-it('C1: nama dikosongkan tidak menghapus nama yang sudah ada', function () {
+it('C1: nama "-" tidak menimpa nama yang sudah ada, nama kosong ditolak', function () {
     $peksos = revUser('peksos');
     $client = revClient(['nama_lengkap' => 'Klien Uji']);
 
-    $this->actingAs($peksos)->post(route('assessment.store', $client), [
-        'simpulan_awal' => 'Simpulan awal.',
-        'nama_lengkap' => '',
-    ]);
+    $this->actingAs($peksos)
+        ->post(route('assessment.store', $client), payloadAssessmentLengkap(['nama_lengkap' => '']))
+        ->assertSessionHasErrors('nama_lengkap');
+
+    $this->actingAs($peksos)
+        ->post(route('assessment.store', $client), payloadAssessmentLengkap(['nama_lengkap' => '-']))
+        ->assertSessionHasNoErrors();
 
     expect($client->refresh()->nama_lengkap)->toBe('Klien Uji');
 });
@@ -117,7 +188,7 @@ it('C2: form edit terbuka dan menampilkan data yang tersimpan', function () {
     $client = revClient();
 
     $this->actingAs($peksos)
-        ->post(route('assessment.store', $client), ['simpulan_awal' => 'Simpulan lama.']);
+        ->post(route('assessment.store', $client), payloadAssessmentLengkap(['simpulan_awal' => 'Simpulan lama.']));
 
     $this->actingAs($peksos)
         ->get(route('assessment.edit', $client))
@@ -128,18 +199,20 @@ it('C2: form edit terbuka dan menampilkan data yang tersimpan', function () {
 
 it('C2: revisi assessment memperbarui data tanpa membuat baris baru', function () {
     $peksos = revUser('peksos');
+    $admin = revUser('admin-rps');
     $client = revClient();
 
     $this->actingAs($peksos)
-        ->post(route('assessment.store', $client), ['simpulan_awal' => 'Simpulan lama.']);
+        ->post(route('assessment.store', $client), payloadAssessmentLengkap(['simpulan_awal' => 'Simpulan lama.']));
 
     $this->actingAs($peksos)
-        ->put(route('assessment.update', $client), ['simpulan_awal' => 'Simpulan baru.'])
+        ->put(route('assessment.update', $client), payloadAssessmentLengkap(['simpulan_awal' => 'Simpulan baru.']))
         ->assertRedirect(route('clients.show', $client->id));
 
     expect(ClientAssessment::count())->toBe(1)
         ->and(ClientAssessment::first()->simpulan_awal)->toBe('Simpulan baru.')
-        ->and($client->refresh()->status)->toBe(Client::STATUS_ASSESSMENT);
+        ->and($client->refresh()->status)->toBe(Client::STATUS_ASSESSMENT)
+        ->and($admin->notifications()->count())->toBe(1);
 });
 
 it('C2: revisi ditolak setelah klien masuk penanganan', function () {
@@ -183,4 +256,70 @@ it('C2: role selain Peksos tidak dapat membuka form edit', function () {
 // ---------------------------------------------------------------- F3
 it('F3: rute penutupan kasus tanpa persetujuan sudah dihapus', function () {
     expect(Route::has('penanganan.tutup'))->toBeFalse();
+});
+
+it('pendidikan terakhir hanya menerima pilihan yang tersedia', function () {
+    $peksos = revUser('peksos');
+    $client = revClient();
+
+    $this->actingAs($peksos)
+        ->post(route('assessment.store', $client), payloadAssessmentLengkap(['pendidikan_terakhir' => 'Sekolah Rakyat']))
+        ->assertSessionHasErrors('pendidikan_terakhir');
+
+    expect(ClientAssessment::count())->toBe(0);
+});
+
+it('status perkawinan hanya menerima pilihan yang tersedia', function () {
+    $peksos = revUser('peksos');
+    $client = revClient();
+
+    $response = $this->actingAs($peksos)->get(route('assessment.create', $client))->assertOk();
+    foreach (ClientAssessment::STATUS_PERKAWINAN as $status) {
+        $response->assertSee('<option value="'.$status.'"', false);
+    }
+
+    $this->actingAs($peksos)
+        ->post(route('assessment.store', $client), payloadAssessmentLengkap(['status_perkawinan' => 'Cerai hidup']))
+        ->assertSessionHasNoErrors();
+
+    expect(ClientAssessment::firstOrFail()->status_perkawinan)->toBe('Cerai hidup');
+
+    $client = revClient(['nama_lengkap' => 'Klien Kedua']);
+    $this->actingAs($peksos)
+        ->post(route('assessment.store', $client), payloadAssessmentLengkap(['status_perkawinan' => 'Cerai']))
+        ->assertSessionHasErrors('status_perkawinan');
+});
+
+it('pendidikan terakhir tersimpan dari pilihan dan "-" disimpan NULL', function () {
+    $peksos = revUser('peksos');
+    $client = revClient();
+
+    $this->actingAs($peksos)
+        ->post(route('assessment.store', $client), payloadAssessmentLengkap(['pendidikan_terakhir' => 'Sarjana (S1 / D4)']))
+        ->assertSessionHasNoErrors();
+
+    expect(ClientAssessment::firstOrFail()->pendidikan_terakhir)->toBe('Sarjana (S1 / D4)');
+
+    $this->actingAs($peksos)
+        ->put(route('assessment.update', $client), payloadAssessmentLengkap(['pendidikan_terakhir' => '-']))
+        ->assertSessionHasNoErrors();
+
+    expect(ClientAssessment::firstOrFail()->pendidikan_terakhir)->toBeNull();
+});
+
+it('data pendidikan lama (teks bebas) tetap tampil dan bisa disimpan ulang saat edit', function () {
+    $peksos = revUser('peksos');
+    $client = revClient();
+
+    $this->actingAs($peksos)->post(route('assessment.store', $client), payloadAssessmentLengkap());
+    ClientAssessment::firstOrFail()->update(['pendidikan_terakhir' => 'SMA']); // nilai dari masa teks bebas
+
+    $this->actingAs($peksos)
+        ->get(route('assessment.edit', $client))
+        ->assertOk()
+        ->assertSee('SMA (data lama)');
+
+    $this->actingAs($peksos)
+        ->put(route('assessment.update', $client), payloadAssessmentLengkap(['pendidikan_terakhir' => 'SMA']))
+        ->assertSessionHasNoErrors();
 });

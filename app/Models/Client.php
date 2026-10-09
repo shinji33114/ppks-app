@@ -15,6 +15,13 @@ class Client extends Model
     public const STATUS_SELESAI = 'selesai';
     public const STATUS_DIRUJUK = 'dirujuk';
 
+    /** Daftar Kategori PPKS, dipisah dari problem_awal (field 6 dokumen = teks bebas)
+     *  supaya tetap bisa dipakai untuk grafik breakdown di halaman Statistik. */
+    public const KATEGORI_PPKS = [
+        'Lansia Terlantar', 'Anak Jalanan', 'Anak Terlantar', 'Disabilitas Terlantar',
+        'Korban Kekerasan', 'Gelandangan / Pengemis', 'ODGJ Terlantar', 'Lainnya',
+    ];
+
     protected $fillable = [
         'status',
         'tanggal_masuk',
@@ -22,6 +29,7 @@ class Client extends Model
         'tkp_kronologi',
         'kondisi_fisik',
         'problem_awal',
+        'kategori_ppks',
         'nama_lengkap',
         'nama_alias',
         'foto_klien',
@@ -97,6 +105,11 @@ class Client extends Model
     public function exitDocuments()
     {
         return $this->hasMany(ClientExitDocument::class);
+    }
+
+    public function revisions()
+    {
+        return $this->hasMany(ClientRevision::class)->latest();
     }
 
     public function archivedBy()

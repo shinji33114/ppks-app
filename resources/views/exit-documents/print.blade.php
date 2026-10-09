@@ -87,7 +87,7 @@
         </div>
 
         <div class="signature">
-            <div>{{ $document->tanggal_surat->format('d F Y') }}</div>
+            <div>{{ $document->tanggal_surat->translatedFormat('d F Y') }}</div>
             <div>Kepala RPS</div>
             <div class="signature-space"></div>
             <strong>{{ $document->approver?->name ?: 'Kepala RPS' }}</strong>

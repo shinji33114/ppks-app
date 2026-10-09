@@ -5,17 +5,76 @@
 
 @section('content')
 
-@if ($client->is_archived)
+@if ($isClosedCase)
     <div class="alert alert-secondary d-flex align-items-center gap-2 mb-4">
         <i class="bi bi-archive-fill"></i>
         <div>
             <strong>Data ini sudah diarsipkan</strong> pada
-            {{ optional($client->archived_at)->format('d F Y, H:i') }}
+            {{ optional($client->archived_at)->translatedFormat('d F Y, H:i') }}
             oleh {{ optional($client->archivedBy)->name ?? 'sistem' }}.
             Halaman ini ditampilkan sebagai READ-ONLY.
         </div>
     </div>
 @endif
+
+@php
+    $isFinal = in_array($client->status, [\App\Models\Client::STATUS_SELESAI, \App\Models\Client::STATUS_DIRUJUK], true);
+    $currentStep = match ($client->status) {
+        \App\Models\Client::STATUS_DRAFT => 0,
+        \App\Models\Client::STATUS_ASSESSMENT => 1,
+        \App\Models\Client::STATUS_PENANGANAN => 2,
+        default => 3,
+    };
+    $steps = [
+        ['Registrasi', 'Tahap 1'],
+        ['Assessment', 'Tahap 2'],
+        ['Penanganan', 'Tahap 3'],
+        [$isFinal ? $client->status_label : 'Selesai / Dirujuk', 'Hasil akhir'],
+    ];
+@endphp
+
+@push('styles')
+<style>
+    .stepper-ppks { display: flex; align-items: flex-start; margin-bottom: 1.5rem; }
+    .stepper-ppks .step { flex: 1; text-align: center; position: relative; }
+    .stepper-ppks .step:not(:last-child)::after {
+        content: ''; position: absolute; top: 17px; left: 50%; width: 100%; height: 3px;
+        background: #dee2e6; z-index: 0;
+    }
+    .stepper-ppks .step.done:not(:last-child)::after { background: #198754; }
+    .stepper-ppks .dot {
+        position: relative; z-index: 1; width: 36px; height: 36px; margin: 0 auto 6px;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-weight: 700; background: #dee2e6; color: #6c757d;
+    }
+    .stepper-ppks .step.done .dot { background: #198754; color: #fff; }
+    .stepper-ppks .step.current .dot { background: #0a2e1e; color: #fff; box-shadow: 0 0 0 4px rgba(25, 135, 84, .25); }
+    .stepper-ppks .step-label { font-weight: 600; font-size: .9rem; }
+    .stepper-ppks .step.current .step-label { color: #0a2e1e; }
+    .stepper-ppks .step-sub { font-size: .75rem; color: #6c757d; }
+</style>
+@endpush
+
+<div class="card border-light shadow-sm p-4 mb-4">
+    <div class="stepper-ppks" aria-label="Progres penanganan klien">
+        @foreach ($steps as $i => $step)
+            @php
+                $state = ($isFinal || $i < $currentStep) ? 'done' : (($i === $currentStep) ? 'current' : 'pending');
+            @endphp
+            <div class="step {{ $state }}">
+                <div class="dot">
+                    @if ($state === 'done')
+                        <i class="bi bi-check-lg"></i>
+                    @else
+                        {{ $i + 1 }}
+                    @endif
+                </div>
+                <div class="step-label">{{ $step[0] }}</div>
+                <div class="step-sub">{{ $step[1] }}</div>
+            </div>
+        @endforeach
+    </div>
+</div>
 
 <div class="row g-4">
 
@@ -23,7 +82,7 @@
     <div class="col-lg-4">
         <div class="card border-light shadow-sm p-4 text-center">
             @if ($client->foto_klien)
-                <img src="{{ asset('storage/' . $client->foto_klien) }}" alt="Foto Klien"
+                <img src="{{ route('clients.photo', $client) }}" alt="Foto Klien"
                      class="rounded-3 mb-3" style="width: 100%; max-height: 280px; object-fit: cover;">
             @else
                 <div class="d-flex align-items-center justify-content-center bg-light rounded-3 mb-3"
@@ -37,7 +96,7 @@
                 <div class="text-muted small mb-2">alias {{ $client->nama_alias }}</div>
             @endif
 
-            <span class="badge-table {{ $client->status_badge_class }} d-inline-block mb-3">{{ $client->status_label }}</span>
+            <span class="badge-table {{ $client->status_badge_class }} d-inline-flex mb-3">{{ $client->status_label }}</span>
 
             @unless ($isClosedCase)
                 @role('peksos')
@@ -64,6 +123,14 @@
                     @endif
                 @endrole
             @endunless
+
+            @role('kepala-rps')
+                @if ($isClosedCase)
+        <a href="{{ route('clients.revisi.edit', $client->id) }}" class="btn-custom btn-custom-secondary w-100 mb-2">
+            <i class="bi bi-pencil-square me-1"></i> Revisi Data Arsip
+        </a>
+    @endif
+@endrole
         </div>
     </div>
 
@@ -76,7 +143,7 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <div class="text-muted small">Tanggal Masuk</div>
-                    <div class="fw-medium">{{ $client->tanggal_masuk->format('d F Y') }}</div>
+                    <div class="fw-medium">{{ $client->tanggal_masuk->translatedFormat('d F Y') }}</div>
                 </div>
 
                 <div class="col-md-6">
@@ -91,6 +158,11 @@
 
                 <div class="col-md-6">
                     <div class="text-muted small">Kategori PPKS</div>
+                    <div class="fw-medium">{{ $client->kategori_ppks ?: '—' }}</div>
+                </div>
+
+                <div class="col-12">
+                    <div class="text-muted small">Problem Awal / Bentuk Pelanggaran</div>
                     <div class="fw-medium">{{ $client->problem_awal ?: '—' }}</div>
                 </div>
 
@@ -98,7 +170,7 @@
                     <div class="text-muted small">Data Dukung</div>
                     <div class="fw-medium">
                         @if ($client->data_dukung)
-                            <a href="{{ asset('storage/' . $client->data_dukung) }}" target="_blank">Lihat dokumen</a>
+                            <a href="{{ route('clients.document', $client) }}" target="_blank">Lihat dokumen</a>
                         @else
                             —
                         @endif
@@ -112,7 +184,7 @@
 
                 <div class="col-md-6">
                     <div class="text-muted small">Dicatat pada</div>
-                    <div class="fw-medium">{{ $client->created_at->format('d M Y, H:i') }}</div>
+                    <div class="fw-medium">{{ $client->created_at->translatedFormat('d M Y, H:i') }}</div>
                 </div>
 
                 <div class="col-md-6">
@@ -145,14 +217,14 @@
                 <div class="row g-3">
                     <div class="col-md-4"><div class="text-muted small">NIK</div><div class="fw-medium">{{ $a->nik ?: '—' }}</div></div>
                     <div class="col-md-4"><div class="text-muted small">Tempat, Tanggal Lahir</div>
-                        <div class="fw-medium">{{ $a->tempat_lahir ?: '—' }}{{ $a->tanggal_lahir ? ', ' . $a->tanggal_lahir->format('d M Y') : '' }}</div>
+                        <div class="fw-medium">{{ $a->tempat_lahir ?: '—' }}{{ $a->tanggal_lahir ? ', ' . $a->tanggal_lahir->translatedFormat('d M Y') : '' }}</div>
                     </div>
                     <div class="col-md-4"><div class="text-muted small">Umur / Kategori</div>
                         <div class="fw-medium">{{ $a->umur ? $a->umur . ' th' : '—' }} / {{ \App\Models\ClientAssessment::KATEGORI_UMUR[$a->kategori_umur] ?? '—' }}</div>
                     </div>
                     <div class="col-md-4"><div class="text-muted small">Jenis Kelamin</div><div class="fw-medium">{{ $a->jenis_kelamin === 'L' ? 'Laki-laki' : ($a->jenis_kelamin === 'P' ? 'Perempuan' : '—') }}</div></div>
                     <div class="col-md-4"><div class="text-muted small">Status Perkawinan</div><div class="fw-medium">{{ $a->status_perkawinan ?: '—' }}</div></div>
-                    <div class="col-md-4"><div class="text-muted small">Pendidikan</div><div class="fw-medium">{{ $a->status_pendidikan ?: $a->pendidikan_terakhir ?: '—' }}</div></div>
+                    <div class="col-md-4"><div class="text-muted small">Pendidikan</div><div class="fw-medium">{{ $a->status_pendidikan ?: $a->pendidikan_terakhir ?: '—' }}</div>@if ($a->status_pendidikan && $a->pendidikan_terakhir)<div class="text-muted small">Pendidikan terakhir: {{ $a->pendidikan_terakhir }}</div>@endif</div>
                     <div class="col-12"><div class="text-muted small">Alamat (sesuai KTP)</div><div class="fw-medium">{{ $a->alamat_domisili ?: '—' }}</div></div>
                     @if ($a->detail_alamat_pengakuan)
                         <div class="col-12"><div class="text-muted small">Detail Alamat Pengakuan</div><div class="fw-medium">{{ $a->detail_alamat_pengakuan }}</div></div>
@@ -205,7 +277,7 @@
                 @foreach ($client->followups as $log)
                     <div class="border-bottom pb-2 mb-2">
                         <div class="d-flex justify-content-between">
-                            <strong>{{ \Carbon\Carbon::parse($log->tanggal_tindakan)->format('d F Y') }}</strong>
+                            <strong>{{ \Carbon\Carbon::parse($log->tanggal_tindakan)->translatedFormat('d F Y') }}</strong>
                             <span class="text-muted small">oleh {{ $log->user->name ?? '—' }}</span>
                         </div>
                         <p class="mb-0 mt-1">{{ $log->catatan_tindakan }}</p>
@@ -220,7 +292,7 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <div class="text-muted small">Surat {{ $exitDoc->type === 'rujukan' ? 'Rujukan' : 'Keluar' }} — Tujuan: {{ $exitDoc->tujuan }}</div>
-                        <div class="fw-medium">Tanggal Keluar: {{ optional($exitDoc->tanggal_keluar)->format('d F Y') ?? '—' }}</div>
+                        <div class="fw-medium">Tanggal Keluar: {{ optional($exitDoc->tanggal_keluar)->translatedFormat('d F Y') ?? '—' }}</div>
                         <div class="fw-medium">No. HP Penanggung Jawab: {{ $exitDoc->no_hp_penanggung_jawab ?: '—' }}</div>
                         @if ($exitDoc->status === 'ditolak' && $exitDoc->catatan_penolakan)
                             <div class="text-danger small mt-1">Catatan penolakan: {{ $exitDoc->catatan_penolakan }}</div>
@@ -233,6 +305,28 @@
     </div>
 
 </div>
+
+@role('kepala-rps')
+    @if ($client->revisions->isNotEmpty())
+        <div class="card border-light shadow-sm p-4 mb-4">
+            <h5 class="card-title mb-3"><i class="bi bi-clock-history me-2"></i>Riwayat Revisi Data Resmi</h5>
+            @foreach ($client->revisions as $rev)
+                <div class="border-bottom pb-2 mb-2">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ $rev->created_at->translatedFormat('d F Y, H:i') }}</strong>
+                        <span class="text-muted small">oleh {{ $rev->user->name ?? '—' }}</span>
+                    </div>
+                    <div class="small mt-1"><span class="text-muted">Alasan:</span> {{ $rev->alasan }}</div>
+                    <ul class="small mb-0 mt-1">
+                            @foreach (($rev->changes ?? []) as $field => $chg)
+                                <li>{{ $chg['label'] ?? $field }}: {{ $chg['from'] ?? $chg['dari'] ?? '—' }} → {{ $chg['to'] ?? $chg['ke'] ?? '—' }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endforeach
+        </div>
+    @endif
+@endrole
 
 <div class="mt-2">
     <a href="{{ route('clients.index') }}" class="btn-custom btn-custom-secondary">

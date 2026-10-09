@@ -25,7 +25,7 @@ it('requires a client photo during stage one registration', function () {
 });
 
 it('stores the expanded stage one client data and uploads', function () {
-    Storage::fake('public');
+    Storage::fake('local'); // disk privat, lihat catatan opsi A soal foto/dokumen klien
 
     $user = User::factory()->create();
     $user->assignRole('petugas-piket');
@@ -40,8 +40,9 @@ it('stores the expanded stage one client data and uploads', function () {
         'tkp_kronologi' => 'Ditemukan di Terminal Kota, kondisi lemas.',
         'kondisi_fisik' => 'Kondisi sehat.',
         'problem_awal' => 'Membutuhkan perlindungan sementara.',
-        'nama_lengkap' => '',
+        'nama_lengkap' => '-',
         'nama_alias' => 'Budi',
+        'kategori_ppks' => 'Anak Jalanan',
         'foto_klien' => UploadedFile::fake()->create('client.jpg', 100, 'image/jpeg'),
         'data_dukung' => UploadedFile::fake()->create('pengantar.pdf', 100, 'application/pdf'),
     ]);
@@ -54,8 +55,110 @@ it('stores the expanded stage one client data and uploads', function () {
         ->and($client->tkp_kronologi)->toBe('Ditemukan di Terminal Kota, kondisi lemas.')
         ->and($client->nama_alias)->toBe('Budi')
         ->and($client->kondisi_fisik)->toBe('Kondisi sehat.')
-        ->and($client->problem_awal)->toBe('Membutuhkan perlindungan sementara.');
+        ->and($client->problem_awal)->toBe('Membutuhkan perlindungan sementara.')
+        ->and($client->kategori_ppks)->toBe('Anak Jalanan');
 
-    Storage::disk('public')->assertExists($client->foto_klien);
-    Storage::disk('public')->assertExists($client->data_dukung);
+    Storage::disk('local')->assertExists($client->foto_klien);
+    Storage::disk('local')->assertExists($client->data_dukung);
+});
+
+it('menolak kategori_ppks di luar daftar pilihan', function () {
+    Storage::fake('local');
+    $user = User::factory()->create();
+    $user->assignRole('petugas-piket');
+
+    $this->actingAs($user)->post(route('clients.store'), [
+        'tanggal_masuk' => '2026-09-24',
+        'sumber_aduan' => 'Laporan warga',
+        'tkp_kronologi' => 'Ditemukan di area publik.',
+        'kategori_ppks' => 'Kategori Ngasal',
+        'foto_klien' => UploadedFile::fake()->create('client.jpg', 100, 'image/jpeg'),
+    ])->assertSessionHasErrors('kategori_ppks');
+});
+
+it('menolak registrasi bila ada field yang dikosongkan', function () {
+    Storage::fake('local');
+    $user = User::factory()->create();
+    $user->assignRole('petugas-piket');
+
+    $this->actingAs($user)->post(route('clients.store'), [
+        'tanggal_masuk' => '2026-09-24',
+        'sumber_aduan' => 'Laporan warga',
+        'tkp_kronologi' => 'Ditemukan di area publik.',
+        'foto_klien' => UploadedFile::fake()->create('client.jpg', 100, 'image/jpeg'),
+    ])->assertSessionHasErrors([
+        'nama_lengkap', 'nama_alias', 'kondisi_fisik', 'problem_awal', 'kategori_ppks', 'data_dukung',
+    ]);
+
+    expect(\App\Models\Client::count())->toBe(0);
+});
+
+it('menerima tanda "-" untuk data yang tidak ada', function () {
+    Storage::fake('local');
+    $user = User::factory()->create();
+    $user->assignRole('petugas-piket');
+
+    $this->actingAs($user)->post(route('clients.store'), [
+        'tanggal_masuk' => '2026-09-24',
+        'sumber_aduan' => 'Laporan warga',
+        'tkp_kronologi' => 'Ditemukan di area publik.',
+        'nama_lengkap' => '-',
+        'nama_alias' => '-',
+        'kondisi_fisik' => '-',
+        'problem_awal' => '-',
+        'kategori_ppks' => '-',
+        'tanpa_data_dukung' => '1',
+        'foto_klien' => UploadedFile::fake()->create('client.jpg', 100, 'image/jpeg'),
+    ])->assertSessionHasNoErrors()->assertRedirect(route('dashboard'));
+
+    $client = \App\Models\Client::firstOrFail();
+
+    expect($client->nama_lengkap)->toBe('Tanpa Nama / X')
+        ->and($client->nama_alias)->toBe('-')
+        ->and($client->kondisi_fisik)->toBe('-')
+        ->and($client->problem_awal)->toBe('-')
+        ->and($client->kategori_ppks)->toBeNull()
+        ->and($client->data_dukung)->toBeNull();
+});
+
+it('edit Tahap 1: field tidak boleh dikosongkan, "-" diterima, file lama tetap', function () {
+    Storage::fake('local');
+    $user = User::factory()->create();
+    $user->assignRole('petugas-piket');
+
+    $client = \App\Models\Client::create([
+        'tanggal_masuk' => '2026-09-24',
+        'sumber_aduan' => 'Laporan warga',
+        'tkp_kronologi' => 'Ditemukan di area publik.',
+        'nama_lengkap' => 'Budi',
+        'nama_alias' => 'Bud',
+        'kondisi_fisik' => 'Sehat',
+        'problem_awal' => 'Terlantar',
+        'kategori_ppks' => 'Anak Jalanan',
+        'foto_klien' => 'client-photos/lama.jpg',
+        'status' => \App\Models\Client::STATUS_DRAFT,
+    ]);
+
+    $payload = [
+        'tanggal_masuk' => '2026-09-24',
+        'sumber_aduan' => 'Laporan warga',
+        'tkp_kronologi' => 'Ditemukan di area publik.',
+        'nama_lengkap' => 'Budi',
+        'nama_alias' => '',
+        'kondisi_fisik' => '-',
+        'problem_awal' => '-',
+        'kategori_ppks' => '-',
+        'tanpa_data_dukung' => '1',
+    ];
+
+    $this->actingAs($user)->patch(route('clients.update', $client), $payload)
+        ->assertSessionHasErrors('nama_alias');
+
+    $this->actingAs($user)->patch(route('clients.update', $client), array_merge($payload, ['nama_alias' => '-']))
+        ->assertSessionHasNoErrors();
+
+    $client->refresh();
+    expect($client->nama_alias)->toBe('-')
+        ->and($client->kategori_ppks)->toBeNull()
+        ->and($client->foto_klien)->toBe('client-photos/lama.jpg');
 });

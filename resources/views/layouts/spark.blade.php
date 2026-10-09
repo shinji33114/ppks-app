@@ -8,7 +8,10 @@
   <title>@yield('page-title', 'Dashboard') - Sistem PPKS</title>
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="{{ asset('spark-admin/assets/images/favicon.ico') }}">
+  <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon-32.png') }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('images/favicon-192.png') }}">
+  <link rel="apple-touch-icon" href="{{ asset('images/apple-touch-icon.png') }}">
 
   <!-- Local Third-Party Libraries (100% Offline Compatible) -->
   <link rel="stylesheet" href="{{ asset('spark-admin/assets/libs/bootstrap/css/bootstrap.min.css') }}">
@@ -38,20 +41,88 @@
   }
 </style>
 
+<style>
+    .sidebar-brand-logo {
+        height: 32px;
+        width: auto;
+        transition: transform 0.3s ease;
+    }
+
+    .profile-placeholder {
+        display: inline-flex;
+        flex: 0 0 auto;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-radius: 50%;
+        background-color: #dfe5e7;
+        color: #869398;
+    }
+
+    .sidebar-profile-img {
+        width: 42px;
+        height: 42px;
+        font-size: 1.8rem;
+    }
+
+    .navbar-profile-img {
+        width: 38px;
+        height: 38px;
+        font-size: 1.65rem;
+    }
+
+    .dropdown-menu-profile .dropdown-header {
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+    .sidebar-brand:hover .sidebar-brand-logo {
+        transform: scale(1.12);
+    }
+</style>
   {{-- Tempat untuk CSS tambahan khusus per halaman, kalau dibutuhkan --}}
   @stack('styles')
 </head>
 
 <body>
 
+<body class="@yield('body-class', 'bg-foto')">
+
+  <style>
+  /* Lapisan foto: menempel di layar dan berada di belakang semua konten */
+  body.bg-foto::before {
+    content: "";
+    position: fixed;       /* tidak ikut ter-scroll */
+    inset: 0;              /* menutupi seluruh layar */
+    z-index: -1;           /* berada di belakang konten */
+    background-image:
+      linear-gradient(rgba(244, 246, 245, 0.55), rgba(244, 246, 245, 0.55)), /* lapisan terang */
+      url('{{ asset('images/dashboard-bg.jpg') }}');                         /* fotonya */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  /* Panel tipis agar judul halaman dan footer tetap terbaca di atas foto */
+  body.bg-foto .page-header,
+  body.bg-foto .footer-custom {
+    background: rgba(255, 255, 255, 0.78);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border-radius: 1rem;
+    padding: 1rem 1.5rem;
+  }
+  body.bg-foto .footer-custom { border-top: 0; }
+</style>
+
   <!-- ==========================================
          Sidebar Component
          ========================================== -->
   <div class="sidebar-wrapper" id="sidebar">
     <a href="{{ route('dashboard') }}" class="sidebar-brand">
-      <i class="bi bi-asterisk"></i>
-      <span>Sistem PPKS</span>
-    </a>
+    <img src="{{ asset('images/favicon-tuban.png') }}" alt="Lambang Kabupaten Tuban" class="sidebar-brand-logo">
+    <span>Sistem PPKS</span>
+</a>
 
     <div class="flex-grow-1 overflow-y-auto">
       <div class="sidebar-menu-section">
@@ -148,8 +219,7 @@
 
     <!-- Sidebar Profile Card -->
     <div class="sidebar-profile">
-      <img src="{{ asset('spark-admin/assets/images/avatar.png') }}" alt="{{ auth()->user()->name }}"
-        class="sidebar-profile-img">
+      <span class="sidebar-profile-img profile-placeholder" aria-hidden="true"><i class="bi bi-person-fill"></i></span>
       <div class="sidebar-profile-info">
         <div class="sidebar-profile-name">{{ auth()->user()->name }}</div>
         <div class="sidebar-profile-email">{{ auth()->user()->email }}</div>
@@ -230,12 +300,12 @@
         <div class="dropdown ms-2">
           <button class="navbar-profile-btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
             aria-expanded="false" id="profile-dropdown">
-            <img src="{{ asset('spark-admin/assets/images/avatar.png') }}" alt="Profile" class="navbar-profile-img">
+            <span class="navbar-profile-img profile-placeholder" aria-hidden="true"><i class="bi bi-person-fill"></i></span>
             <span class="navbar-profile-name d-none d-md-inline">{{ auth()->user()->name }}</span>
             <i class="bi bi-chevron-down navbar-profile-caret"></i>
           </button>
           <ul class="dropdown-menu dropdown-menu-end dropdown-menu-profile" aria-labelledby="profile-dropdown">
-            <li class="dropdown-header">Welcome, {{ auth()->user()->name }} !</li>
+            <li class="dropdown-header">Selamat datang, {{ auth()->user()->name }}</li>
             <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="bi bi-person"></i> Akun Saya</a></li>
             <li><hr class="dropdown-divider"></li>
             <li>
@@ -259,7 +329,7 @@
         <p class="page-subtitle">@yield('page-subtitle', '')</p>
       </div>
     </div>
-    <!-- END: Page Header Banner -->
+      
 
     {{-- Notifikasi sukses/gagal, tampil di semua halaman yang pakai layout ini --}}
     @if (session('success'))
@@ -287,7 +357,11 @@
     <!-- Footer Component -->
     <footer class="footer-custom">
       <div class="footer-left">
-        <span class="footer-logo"><i class="bi bi-asterisk"></i> Sistem PPKS</span>
+        <span class="footer-logo">
+          <img src="{{ asset('images/favicon-tuban.png') }}" alt="" style="height: 18px; width: auto; margin-right: 6px; vertical-align: -3px;">
+          Sistem PPKS — Dinas Sosial Kabupaten Tuban
+        </span>
+        <span class="text-muted small ms-2">&copy; {{ date('Y') }} Dinas Kominfo Kabupaten Tuban</span>
       </div>
     </footer>
     <!-- END: Footer Component -->

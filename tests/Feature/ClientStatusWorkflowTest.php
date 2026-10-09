@@ -10,7 +10,7 @@ beforeEach(function () {
     Role::create(['name' => 'kepala-rps']);
 });
 
-it('requires head approval before a referred case is closed', function () {
+it('closes the case at submit (C4) and only signs the letter on head approval', function () {
     $admin = User::factory()->create();
     $admin->assignRole('admin-rps');
     $head = User::factory()->create();
@@ -35,8 +35,13 @@ it('requires head approval before a referred case is closed', function () {
         'no_hp_penanggung_jawab' => '081234567890',
     ]);
 
-    $response->assertRedirect(route('penanganan.index', $client));
-    expect($client->refresh()->status)->toBe(Client::STATUS_PENANGANAN);
+    $response->assertRedirect(route('exit-documents.mine'));
+
+    $this->actingAs($admin)->get(route('exit-documents.mine'))->assertOk();
+
+    // C4 / dokumen: mengisi Tanggal Keluar & Rujukan langsung mengubah status akhir klien.
+    expect($client->refresh()->status)->toBe(Client::STATUS_DIRUJUK)
+        ->and($client->is_archived)->toBeTrue();
 
     $document = ClientExitDocument::firstOrFail();
     $this->actingAs($head)

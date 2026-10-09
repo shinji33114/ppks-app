@@ -5,6 +5,12 @@
 
 @section('content')
 
+<div class="d-flex justify-content-end mb-3">
+    <a href="{{ route('statistik.export') }}" class="btn-custom btn-custom-primary">
+        <i class="bi bi-file-earmark-excel"></i> Unduh Excel
+    </a>
+</div>
+
 <div class="row g-4 mb-2">
     <div class="col-md-4">
         <div class="card border-light shadow-sm p-4 text-center">
@@ -148,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function () {
     new ApexCharts(document.querySelector("#chart-kategori"), {
         chart: { type: 'bar', height: 230, toolbar: { show: false } },
         series: [{ name: 'Jumlah', data: @json($kategoriBreakdown->pluck('total')) }],
-        xaxis: { categories: @json($kategoriBreakdown->pluck('problem_awal')) },
+        xaxis: { categories: @json($kategoriBreakdown->pluck('kategori_ppks')) },
         plotOptions: { bar: { horizontal: true, borderRadius: 4 } },
         colors: ['#ef6c00'],
     }).render();

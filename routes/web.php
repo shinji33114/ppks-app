@@ -9,6 +9,7 @@ use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\ClientExitDocumentController;
 use App\Http\Controllers\StatistikController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ArchiveRevisionController;
 
 // Lihat daftar klien — boleh diakses semua role
 Route::middleware(['auth', 'role:petugas-piket|peksos|admin-rps|kepala-rps'])->group(function () {
@@ -41,6 +42,8 @@ Route::middleware(['auth', 'role:petugas-piket'])->group(function () {
 // Detail klien — boleh diakses semua role
 Route::middleware(['auth', 'role:petugas-piket|peksos|admin-rps|kepala-rps'])->group(function () {
     Route::get('/clients/{client}', [ClientController::class, 'show'])->name('clients.show');
+    Route::get('/clients/{client}/foto', [ClientController::class, 'photo'])->name('clients.photo');
+    Route::get('/clients/{client}/dokumen', [ClientController::class, 'document'])->name('clients.document');
 });
 
 Route::middleware(['auth', 'role:admin-rps'])->group(function () {
@@ -55,6 +58,16 @@ Route::middleware(['auth', 'role:admin-rps'])->group(function () {
         ->name('exit-documents.edit');
     Route::patch('/exit-documents/{document}/resubmit', [ClientExitDocumentController::class, 'resubmit'])
         ->name('exit-documents.resubmit');
+});
+
+Route::middleware(['auth', 'role:admin-rps|kepala-rps'])->group(function () {
+    Route::get('/exit-documents/{document}/pdf', [ClientExitDocumentController::class, 'downloadPdf'])
+        ->name('exit-documents.pdf');
+});
+
+Route::middleware(['auth', 'role:kepala-rps'])->group(function () {
+    Route::get('/clients/{client}/revisi', [ArchiveRevisionController::class, 'edit'])->name('clients.revisi.edit');
+    Route::put('/clients/{client}/revisi', [ArchiveRevisionController::class, 'update'])->name('clients.revisi.update');
 });
 
 Route::middleware(['auth', 'role:kepala-rps'])->group(function () {
@@ -104,6 +117,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'role:kepala-rps'])->group(function () {
     Route::get('/statistik', [StatistikController::class, 'index'])->name('statistik.index');
+    Route::get('/statistik/export', [StatistikController::class, 'export'])->name('statistik.export');
 });
 
 require __DIR__.'/auth.php';

@@ -18,6 +18,7 @@ class ClientExitDocument extends Model
         'keterangan',
         'tanggal_keluar',
         'no_hp_penanggung_jawab',
+        'pdf_path',
         'catatan_penolakan',
         'approved_at',
     ];

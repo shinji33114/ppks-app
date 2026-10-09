@@ -39,7 +39,7 @@
             @forelse ($followups as $log)
                 <div class="border-bottom pb-3 mb-3">
                     <div class="d-flex justify-content-between">
-                        <strong>{{ \Carbon\Carbon::parse($log->tanggal_tindakan)->format('d F Y') }}</strong>
+                        <strong>{{ \Carbon\Carbon::parse($log->tanggal_tindakan)->translatedFormat('d F Y') }}</strong>
                         <span class="text-muted small">oleh {{ $log->user->name ?? 'Tidak diketahui' }}</span>
                     </div>
                     <p class="mb-0 mt-1">{{ $log->catatan_tindakan }}</p>
@@ -104,7 +104,7 @@
                            class="form-control-custom @error('tanggal_keluar') is-invalid-custom @enderror">
                     @error('tanggal_keluar') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                     <div class="text-muted small mt-1">
-                        Tidak boleh sebelum tanggal masuk: {{ \Carbon\Carbon::parse($client->tanggal_masuk)->format('d M Y') }}
+                        Tidak boleh sebelum tanggal masuk: {{ \Carbon\Carbon::parse($client->tanggal_masuk)->translatedFormat('d M Y') }}
                     </div>
                 </div>
 
