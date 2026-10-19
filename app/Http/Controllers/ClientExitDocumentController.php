@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\ClientExitDocument;
-use App\Models\User;
-use App\Notifications\SuratKeluarNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,22 +14,8 @@ use Illuminate\View\View;
 
 class ClientExitDocumentController extends Controller
 {
-    public function index(): View
-    {
-        $documents = ClientExitDocument::with(['client', 'creator'])
-            ->where('status', 'menunggu_persetujuan')
-            ->latest()
-            ->paginate(15);
-
-        return view('exit-documents.index', compact('documents'));
-    }
-
     public function show(ClientExitDocument $document): View
     {
-        if ($document->client->is_archived && ! auth()->user()->hasRole('kepala-rps')) {
-            abort(403);
-        }
-
         $document->load(['client.assessment', 'client.followups.user', 'creator']);
 
         return view('exit-documents.show', compact('document'));
@@ -39,16 +23,12 @@ class ClientExitDocumentController extends Controller
 
     public function print(ClientExitDocument $document): View|RedirectResponse
     {
-        if (! auth()->user()->hasRole('kepala-rps')) {
-            abort(403);
-        }
-
-        if ($document->status !== 'disetujui') {
+        if (! in_array($document->status, ['selesai', 'disetujui'], true)) {
             return redirect()->route('exit-documents.show', $document)
-                ->with('error', 'Surat hanya dapat dicetak setelah disetujui Kepala RPS.');
+                ->with('error', 'Surat ini belum dapat dicetak.');
         }
 
-        $document->load(['client.assessment', 'approver']);
+        $document->load(['client.assessment', 'creator']);
 
         return view('exit-documents.print', compact('document'));
     }
@@ -66,10 +46,8 @@ class ClientExitDocumentController extends Controller
     public function downloadPdf(ClientExitDocument $document)
     {
         $user = auth()->user();
-        $isCreator = $user->hasRole('admin-rps') && (int) $document->created_by === (int) $user->id;
-
-        abort_unless($user->hasRole('kepala-rps') || $isCreator, 403);
-        abort_unless($document->status === 'disetujui', 403, 'PDF final hanya tersedia setelah surat disetujui Kepala RPS.');
+        abort_unless($user->hasAnyRole(['admin', 'super-admin']), 403);
+        abort_unless(in_array($document->status, ['selesai', 'disetujui'], true), 403, 'PDF final tidak tersedia untuk surat ini.');
         abort_unless($document->pdf_path && Storage::disk('local')->exists($document->pdf_path), 404);
 
         $this->generatePdf($document);
@@ -86,7 +64,7 @@ class ClientExitDocumentController extends Controller
 
     private function generatePdf(ClientExitDocument $document): void
     {
-        $document->loadMissing(['client.assessment', 'creator', 'approver']);
+        $document->loadMissing(['client.assessment', 'creator']);
         $path = 'exit-documents/' . $document->id . '.pdf';
         $photoFileUri = null;
         $photoPath = $document->client->foto_klien;
@@ -112,13 +90,6 @@ class ClientExitDocumentController extends Controller
         $document->update(['pdf_path' => $path]);
     }
 
-    /**
-     * C4: sesuai dokumen ("Mengisi Tanggal Keluar & Rujukan otomatis mengubah status
-     * akhir klien menjadi Selesai/Alumni/Dirujuk"), status klien berubah dan diarsipkan
-     * DI SINI, saat Admin Penanganan submit surat -- bukan menunggu approve() Kepala RPS.
-     * Persetujuan Kepala RPS tetap berjalan, tapi hanya menjadi status pada surat itu
-     * sendiri (dokumen resmi), tidak lagi jadi syarat status klien berubah.
-     */
     public function store(Request $request, Client $client): RedirectResponse
     {
         if (! in_array($client->status, [Client::STATUS_ASSESSMENT, Client::STATUS_PENANGANAN], true)) {
@@ -130,11 +101,7 @@ class ClientExitDocumentController extends Controller
         }
 
         if ($client->exitDocuments()->where('status', 'ditolak')->exists()) {
-            return back()->with('error', 'Surat sebelumnya ditolak Kepala RPS. Perbaiki dan ajukan ulang dari menu "Surat Saya".');
-        }
-
-        if ($client->exitDocuments()->where('status', 'menunggu_persetujuan')->exists()) {
-            return back()->with('error', 'Klien ini sudah memiliki surat yang menunggu persetujuan.');
+            return back()->with('error', 'Surat sebelumnya ditolak. Perbaiki dan ajukan ulang dari menu "Surat Saya".');
         }
 
         $validated = $request->validate([
@@ -155,7 +122,7 @@ class ClientExitDocumentController extends Controller
         DB::transaction(function () use ($validated, $client) {
             $validated['client_id'] = $client->id;
             $validated['created_by'] = auth()->id();
-            $validated['status'] = 'menunggu_persetujuan';
+            $validated['status'] = 'selesai';
 
             $document = ClientExitDocument::create($validated);
 
@@ -174,14 +141,10 @@ class ClientExitDocumentController extends Controller
             ]);
 
             $this->generatePdf($document);
-
-            User::role('kepala-rps')->each(fn (User $head) => $head->notify(
-                new SuratKeluarNotification($document, SuratKeluarNotification::DIAJUKAN)
-            ));
         });
 
         return redirect()->route('exit-documents.mine')
-            ->with('success', 'Klien telah ditandai selesai dan surat menunggu persetujuan Kepala RPS.');
+            ->with('success', 'Surat berhasil diterbitkan dan klien telah ditandai selesai.');
     }
 
     public function edit(ClientExitDocument $document): View|RedirectResponse
@@ -195,9 +158,7 @@ class ClientExitDocumentController extends Controller
     }
 
     /**
-     * C4: surat yang ditolak Kepala RPS tidak lagi otomatis mengubah status/arsip klien
-     * (itu sudah terjadi saat store()). resubmit() di sini hanya memperbaiki isi surat
-     * dan mengajukan ulang persetujuannya.
+     * Allows correction of letters rejected before the approval workflow was removed.
      */
     public function resubmit(Request $request, ClientExitDocument $document): RedirectResponse
     {
@@ -225,7 +186,7 @@ class ClientExitDocumentController extends Controller
 
         DB::transaction(function () use ($validated, $document) {
             $document->update(array_merge($validated, [
-                'status' => 'menunggu_persetujuan',
+                'status' => 'selesai',
                 'approved_by' => null,
                 'approved_at' => null,
                 'catatan_penolakan' => null,
@@ -247,83 +208,9 @@ class ClientExitDocumentController extends Controller
 
             $document->refresh();
             $this->generatePdf($document);
-
-            User::role('kepala-rps')->each(fn (User $head) => $head->notify(
-                new SuratKeluarNotification($document, SuratKeluarNotification::DIAJUKAN)
-            ));
         });
 
         return redirect()->route('exit-documents.mine')
-            ->with('success', 'Surat berhasil diperbaiki dan diajukan ulang.');
-    }
-
-    /**
-     * C4: approve() sekarang HANYA menandatangani surat secara formal.
-     * Status & arsip klien sudah berubah sejak store().
-     */
-    public function approve(ClientExitDocument $document): RedirectResponse
-    {
-        if ($document->status !== 'menunggu_persetujuan') {
-            return back()->with('error', 'Surat ini sudah diproses.');
-        }
-
-        DB::transaction(function () use ($document) {
-            $document->update([
-                'status' => 'disetujui',
-                'approved_by' => auth()->id(),
-                'approved_at' => now(),
-            ]);
-
-            $document->refresh();
-            $this->generatePdf($document);
-
-            $document->creator?->notify(
-                new SuratKeluarNotification($document, SuratKeluarNotification::DISETUJUI)
-            );
-        });
-
-        return back()->with('success', 'Surat telah disetujui secara resmi.');
-    }
-
-    /**
-     * C4: karena status klien sudah berubah otomatis sejak store(), surat yang
-     * DITOLAK Kepala RPS berarti kasus itu SEHARUSNYA belum benar-benar selesai.
-     * Maka klien dikembalikan aktif (kembali ke 'penanganan', tidak lagi diarsipkan)
-     * sampai Admin RPS memperbaiki dan mengajukan ulang suratnya.
-     */
-    public function reject(Request $request, ClientExitDocument $document): RedirectResponse
-    {
-        if ($document->status !== 'menunggu_persetujuan') {
-            return back()->with('error', 'Surat ini sudah diproses.');
-        }
-
-        $validated = $request->validate([
-            'catatan_penolakan' => ['required', 'string', 'max:2000'],
-        ]);
-
-        DB::transaction(function () use ($document, $validated) {
-            $document->update([
-                'status' => 'ditolak',
-                'approved_by' => auth()->id(),
-                'approved_at' => now(),
-                'catatan_penolakan' => $validated['catatan_penolakan'],
-            ]);
-
-            $document->client->update([
-                'status' => Client::STATUS_PENANGANAN,
-                'status_akhir' => null,
-                'is_archived' => false,
-                'archived_at' => null,
-                'archived_by' => null,
-            ]);
-
-            // Beri tahu Admin RPS pembuat surat lewat lonceng notifikasi.
-            $document->refresh();
-            $document->creator?->notify(
-                new SuratKeluarNotification($document, SuratKeluarNotification::DITOLAK)
-            );
-        });
-
-        return back()->with('success', 'Surat ditolak dan klien dikembalikan ke status Dalam Penanganan. Admin RPS dapat memperbaiki dan mengajukan ulang.');
+            ->with('success', 'Surat lama berhasil diperbaiki dan diterbitkan kembali.');
     }
 }

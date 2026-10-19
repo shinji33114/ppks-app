@@ -6,15 +6,13 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
-    foreach (['petugas-piket', 'peksos', 'admin-rps', 'kepala-rps'] as $role) {
-        Role::create(['name' => $role]);
-    }
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
 });
 
 function arsipRevUser(string $role): User
 {
     $user = User::factory()->create();
-    $user->assignRole($role);
+    $user->assignRole('admin');
 
     return $user;
 }
@@ -83,19 +81,19 @@ it('requires a reason for every revision', function () {
         ->and(ClientRevision::count())->toBe(0);
 });
 
-it('forbids every role except kepala-rps from revising archived data', function (string $role) {
+it('allows an admin to revise archived data', function () {
     $client = arsipRevClient();
 
-    $this->actingAs(arsipRevUser($role))
+    $this->actingAs(arsipRevUser('admin'))
         ->get(route('clients.revisi.edit', $client))
-        ->assertForbidden();
+        ->assertOk();
 
-    $this->actingAs(arsipRevUser($role))
+    $this->actingAs(arsipRevUser('admin'))
         ->put(route('clients.revisi.update', $client), arsipRevPayload(['nama_lengkap' => 'Diubah']))
-        ->assertForbidden();
+        ->assertRedirect(route('clients.show', $client));
 
-    expect($client->refresh()->nama_lengkap)->toBe('Klien Uji');
-})->with(['petugas-piket', 'peksos', 'admin-rps']);
+    expect($client->refresh()->nama_lengkap)->toBe('Diubah');
+});
 
 it('does not allow revision of a client that is not archived', function () {
     $client = arsipRevClient(['status' => Client::STATUS_PENANGANAN, 'is_archived' => false]);
@@ -185,10 +183,11 @@ it('shows the progress stepper on the client detail page', function () {
         ->assertSee('Hasil akhir');
 });
 
-it('uses readable role names and the Tuban footer on the dashboard', function () {
-    $this->actingAs(arsipRevUser('peksos'))
+it('shows the admin role and the Tuban footer on the dashboard', function () {
+    $this->actingAs(arsipRevUser('admin'))
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('Pekerja Sosial')
+        ->assertSee('Dashboard Statistik')
+        ->assertSee('Total Penerima Manfaat')
         ->assertSee('Dinas Sosial Kabupaten Tuban');
 });

@@ -6,8 +6,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
-    Role::create(['name' => 'kepala-rps']);
-    Role::create(['name' => 'admin-rps']);
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
 });
 
 function unduhExcel($test, User $user): string
@@ -21,9 +20,9 @@ function unduhExcel($test, User $user): string
     return $path;
 }
 
-it('lets the head download the statistics as an xlsx file', function () {
+it('lets an admin download the statistics as an xlsx file', function () {
     $head = User::factory()->create();
-    $head->assignRole('kepala-rps');
+    $head->assignRole('admin');
 
     $this->actingAs($head)
         ->get(route('statistik.export'))
@@ -31,11 +30,24 @@ it('lets the head download the statistics as an xlsx file', function () {
         ->assertDownload('statistik-ppks-' . now()->format('Y-m-d') . '.xlsx');
 });
 
-it('forbids other roles from downloading the statistics', function () {
+it('lets every admin download the statistics', function () {
     $admin = User::factory()->create();
-    $admin->assignRole('admin-rps');
+    $admin->assignRole('admin');
 
-    $this->actingAs($admin)->get(route('statistik.export'))->assertForbidden();
+    $this->actingAs($admin)->get(route('statistik.export'))->assertOk();
+});
+
+it('shows a clear Excel export action on the statistics dashboard', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('Ekspor laporan statistik')
+        ->assertSee('Unduh data Excel')
+        ->assertSee(route('statistik.export'), false)
+        ->assertSee('format Excel (.xlsx)');
 });
 
 it('redirects guests to the login page', function () {
@@ -44,7 +56,7 @@ it('redirects guests to the login page', function () {
 
 it('writes the same numbers that the dashboard shows', function () {
     $head = User::factory()->create();
-    $head->assignRole('kepala-rps');
+    $head->assignRole('admin');
 
     foreach (['Lansia Terlantar', 'Lansia Terlantar', 'Anak Jalanan'] as $i => $kategori) {
         Client::create([
@@ -69,7 +81,7 @@ it('writes the same numbers that the dashboard shows', function () {
 
 it('does not let user-entered text become an Excel formula', function () {
     $head = User::factory()->create();
-    $head->assignRole('kepala-rps');
+    $head->assignRole('admin');
 
     Client::create([
         'tanggal_masuk' => now()->toDateString(),

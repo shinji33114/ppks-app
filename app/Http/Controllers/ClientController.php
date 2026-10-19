@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Concerns\TerimaStrip;
 
@@ -89,14 +90,39 @@ class ClientController extends Controller
      */
     public function index(Request $request)
 {
-    $query = Client::query();
+    $stageStatuses = [
+        'draft' => [Client::STATUS_DRAFT],
+        'assessment' => [Client::STATUS_ASSESSMENT],
+        'penanganan' => [Client::STATUS_PENANGANAN],
+        'final' => [Client::STATUS_SELESAI, Client::STATUS_DIRUJUK],
+    ];
+    $validated = $request->validate([
+        'stage' => ['nullable', Rule::in(array_keys($stageStatuses))],
+        'tanggal_masuk' => ['nullable', 'date_format:Y-m-d'],
+    ]);
+    $stage = $validated['stage'] ?? null;
+    $tanggalMasuk = $validated['tanggal_masuk'] ?? null;
 
-    if (! $request->user()->hasRole('kepala-rps')) {
-        $query->where('is_archived', false)
-            ->whereNotIn('status', [Client::STATUS_SELESAI, Client::STATUS_DIRUJUK]);
-    }
+    $statusCounts = Client::query()
+        ->selectRaw('status, COUNT(*) as total')
+        ->groupBy('status')
+        ->pluck('total', 'status');
+    $stageCounts = [
+        'draft' => (int) ($statusCounts[Client::STATUS_DRAFT] ?? 0),
+        'assessment' => (int) ($statusCounts[Client::STATUS_ASSESSMENT] ?? 0),
+        'penanganan' => (int) ($statusCounts[Client::STATUS_PENANGANAN] ?? 0),
+        'final' => (int) ($statusCounts[Client::STATUS_SELESAI] ?? 0)
+            + (int) ($statusCounts[Client::STATUS_DIRUJUK] ?? 0),
+    ];
 
-    $clients = $query->when($request->search, function ($query, $search) {
+    $clients = Client::query()
+        ->when($stage, function ($query, $stage) use ($stageStatuses) {
+            $query->whereIn('status', $stageStatuses[$stage]);
+        })
+        ->when($tanggalMasuk, function ($query, $tanggalMasuk) {
+            $query->whereDate('tanggal_masuk', $tanggalMasuk);
+        })
+        ->when($request->search, function ($query, $search) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama_lengkap', 'like', "%{$search}%")
                   ->orWhere('nama_alias', 'like', "%{$search}%");
@@ -106,7 +132,7 @@ class ClientController extends Controller
         ->paginate(10)
         ->withQueryString();
 
-    return view('clients.index', compact('clients'));
+    return view('clients.index', compact('clients', 'stage', 'stageCounts', 'tanggalMasuk'));
 }
 
     /**
@@ -141,8 +167,8 @@ class ClientController extends Controller
 
         $client = Client::create($validated);
 
-$peksosList = \App\Models\User::role('peksos')->get();
-\Illuminate\Support\Facades\Notification::send($peksosList, new \App\Notifications\KlienBaruMasuk($client));
+$admins = \App\Models\User::role(['admin', 'super-admin'])->get();
+\Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\KlienBaruMasuk($client));
 
 return redirect()->route('dashboard')
                   ->with('success', 'Klien berhasil diregistrasi.');
@@ -177,15 +203,8 @@ if ($request->hasFile('data_dukung')) {
      */
     public function show(Client $client)
     {
-        // D4/D5 (revisi): klien yang sudah diarsipkan (Selesai/Dirujuk) HANYA boleh dilihat
-        // oleh kepala-rps. Role lain (petugas-piket, peksos, admin-rps) diblokir sepenuhnya,
-        // karena revisi data arsip juga jadi wewenang eksklusif kepala-rps (lihat E3).
         $isClosedCase = $client->is_archived
             || in_array($client->status, [Client::STATUS_SELESAI, Client::STATUS_DIRUJUK], true);
-
-        if ($isClosedCase) {
-            abort_unless(auth()->user()->hasRole('kepala-rps'), 403);
-        }
 
         return view('clients.show', compact('client', 'isClosedCase'));
     }
@@ -220,7 +239,7 @@ if ($request->hasFile('data_dukung')) {
             || in_array($client->status, [Client::STATUS_SELESAI, Client::STATUS_DIRUJUK], true);
 
         if ($isClosedCase) {
-            abort_unless(auth()->user()->hasAnyRole(['kepala-rps', 'admin-rps', 'peksos']), 403);
+            abort_unless(auth()->user()->hasAnyRole(['admin', 'super-admin']), 403);
         }
     }
 }

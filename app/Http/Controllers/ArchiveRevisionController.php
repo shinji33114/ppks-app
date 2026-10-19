@@ -56,13 +56,13 @@ class ArchiveRevisionController extends Controller
     }
 
     /**
-     * Menampilkan form revisi. Hanya untuk Kepala RPS, hanya untuk data yang
+     * Menampilkan form revisi hanya untuk data yang
      * sudah diarsipkan (Selesai/Dirujuk) — data yang masih berjalan direvisi
      * lewat form Tahap 1/2/3 masing-masing, bukan lewat sini.
      */
     public function edit(Client $client): View
     {
-        abort_unless(auth()->user()->hasRole('kepala-rps'), 403);
+        abort_unless(auth()->user()->hasAnyRole(['admin', 'super-admin']), 403);
         abort_unless($this->isClosedCase($client), 404, 'Fitur ini hanya untuk data yang sudah diarsipkan.');
 
         return view('clients.revisi', compact('client'));
@@ -73,7 +73,7 @@ class ArchiveRevisionController extends Controller
      */
     public function update(Request $request, Client $client): RedirectResponse
     {
-        abort_unless(auth()->user()->hasRole('kepala-rps'), 403);
+        abort_unless(auth()->user()->hasAnyRole(['admin', 'super-admin']), 403);
         abort_unless($this->isClosedCase($client), 404);
 
         $validated = $request->validate($this->rules($client));

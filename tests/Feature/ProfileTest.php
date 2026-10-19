@@ -9,7 +9,12 @@ test('profile page is displayed', function () {
         ->actingAs($user)
         ->get('/profile');
 
-    $response->assertOk();
+    $response->assertOk()
+        ->assertSee('Akun Saya')
+        ->assertSee('Informasi Profil')
+        ->assertSee('Keamanan Kata Sandi')
+        ->assertSee('Ringkasan akun')
+        ->assertSee('Hapus akun');
 });
 
 test('profile information can be updated', function () {

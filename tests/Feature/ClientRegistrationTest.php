@@ -6,14 +6,12 @@ use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
-    // 'peksos' wajib ada: ClientController@store mengirim notifikasi ke role ini saat registrasi disimpan.
-    Role::create(['name' => 'petugas-piket']);
-    Role::create(['name' => 'peksos']);
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
 });
 
 it('requires a client photo during stage one registration', function () {
     $user = User::factory()->create();
-    $user->assignRole('petugas-piket');
+    $user->assignRole('admin');
 
     $response = $this->actingAs($user)->post(route('clients.store'), [
         'tanggal_masuk' => '2026-09-24',
@@ -28,7 +26,7 @@ it('stores the expanded stage one client data and uploads', function () {
     Storage::fake('local'); // disk privat, lihat catatan opsi A soal foto/dokumen klien
 
     $user = User::factory()->create();
-    $user->assignRole('petugas-piket');
+    $user->assignRole('admin');
 
     // Catatan: sejak migration 2026_09_26_162644 (remove_redundant_fields_from_clients_table),
     // jenis_kelamin/umur/alamat adalah data Tahap 2 (client_assessments), bukan Tahap 1 (clients).
@@ -65,7 +63,7 @@ it('stores the expanded stage one client data and uploads', function () {
 it('menolak kategori_ppks di luar daftar pilihan', function () {
     Storage::fake('local');
     $user = User::factory()->create();
-    $user->assignRole('petugas-piket');
+    $user->assignRole('admin');
 
     $this->actingAs($user)->post(route('clients.store'), [
         'tanggal_masuk' => '2026-09-24',
@@ -79,7 +77,7 @@ it('menolak kategori_ppks di luar daftar pilihan', function () {
 it('menolak registrasi bila ada field yang dikosongkan', function () {
     Storage::fake('local');
     $user = User::factory()->create();
-    $user->assignRole('petugas-piket');
+    $user->assignRole('admin');
 
     $this->actingAs($user)->post(route('clients.store'), [
         'tanggal_masuk' => '2026-09-24',
@@ -96,7 +94,7 @@ it('menolak registrasi bila ada field yang dikosongkan', function () {
 it('menerima tanda "-" untuk data yang tidak ada', function () {
     Storage::fake('local');
     $user = User::factory()->create();
-    $user->assignRole('petugas-piket');
+    $user->assignRole('admin');
 
     $this->actingAs($user)->post(route('clients.store'), [
         'tanggal_masuk' => '2026-09-24',
@@ -124,7 +122,7 @@ it('menerima tanda "-" untuk data yang tidak ada', function () {
 it('edit Tahap 1: field tidak boleh dikosongkan, "-" diterima, file lama tetap', function () {
     Storage::fake('local');
     $user = User::factory()->create();
-    $user->assignRole('petugas-piket');
+    $user->assignRole('admin');
 
     $client = \App\Models\Client::create([
         'tanggal_masuk' => '2026-09-24',

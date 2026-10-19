@@ -10,13 +10,6 @@ use Illuminate\View\View;
 
 class UserManagementController extends Controller
 {
-    private const ASSIGNABLE_ROLES = [
-        'petugas-piket',
-        'peksos',
-        'admin-rps',
-        'kepala-rps',
-    ];
-
     public function index(): View
     {
         $users = User::with('roles')->latest()->paginate(15);
@@ -26,7 +19,7 @@ class UserManagementController extends Controller
 
     public function create(): View
     {
-        return view('users.create', ['roles' => self::ASSIGNABLE_ROLES]);
+        return view('users.create', ['roles' => ['admin', 'super-admin']]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -35,7 +28,7 @@ class UserManagementController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', 'min:8'],
-            'role' => ['required', Rule::in(self::ASSIGNABLE_ROLES)],
+            'role' => ['required', Rule::in(['admin', 'super-admin'])],
         ]);
 
         $user = User::create([
@@ -55,9 +48,9 @@ class UserManagementController extends Controller
             return back()->with('error', 'Anda tidak dapat menonaktifkan akun sendiri.');
         }
 
-        if ($user->hasRole('kepala-rps') && $user->is_active
-            && User::role('kepala-rps')->where('is_active', true)->count() <= 1) {
-            return back()->with('error', 'Minimal harus ada satu akun Kepala RPS yang aktif.');
+        if ($user->hasRole('super-admin') && $user->is_active
+            && User::role('super-admin')->where('is_active', true)->count() <= 1) {
+            return back()->with('error', 'Minimal harus ada satu akun Super Admin yang aktif.');
         }
 
         $user->update(['is_active' => ! $user->is_active]);

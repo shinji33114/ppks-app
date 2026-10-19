@@ -25,7 +25,7 @@ class StatistikController extends Controller
     /**
      * Unduh seluruh angka yang tampil di dashboard statistik sebagai file Excel (.xlsx).
      * Data diambil dari kumpulkanStatistik() yang sama dengan halaman dashboard,
-     * sehingga isi Excel selalu identik dengan yang dilihat Kepala RPS di layar.
+     * sehingga isi Excel selalu identik dengan yang dilihat Admin di layar.
      */
     public function export(): StreamedResponse
     {
@@ -159,7 +159,7 @@ class StatistikController extends Controller
             ];
         }
 
-        // 3. Pilah jenis kelamin (dari data assessment yang sudah diisi Peksos)
+        // 3. Pilah jenis kelamin (dari data assessment yang sudah diisi Admin)
         $genderCounts = ClientAssessment::select('jenis_kelamin', DB::raw('count(*) as total'))
             ->whereNotNull('jenis_kelamin')
             ->groupBy('jenis_kelamin')

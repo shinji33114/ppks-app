@@ -192,7 +192,7 @@
             </form>
 
                    <p class="login-footer-text">
-                Belum memiliki akun? Hubungi Kepala RPS untuk dibuatkan akun.
+                Belum memiliki akun? Hubungi Super Admin untuk dibuatkan akun.
             </p>
 
             <div class="login-copyright text-center mt-3">

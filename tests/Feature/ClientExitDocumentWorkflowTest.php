@@ -3,20 +3,17 @@
 use App\Models\Client;
 use App\Models\ClientExitDocument;
 use App\Models\User;
-use App\Notifications\SuratKeluarNotification;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
-    foreach (['petugas-piket', 'peksos', 'admin-rps', 'kepala-rps'] as $role) {
-        Role::create(['name' => $role]);
-    }
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
 });
 
 function exitTestUser(string $role): User
 {
     $user = User::factory()->create();
-    $user->assignRole($role);
+    $user->assignRole('admin');
 
     return $user;
 }
@@ -45,10 +42,10 @@ function exitDocumentPayload(array $override = []): array
 }
 
 // ---------------------------------------------------------------- C4
-it('C4: status klien berubah otomatis & diarsipkan saat surat disubmit, tanpa menunggu approval', function () {
+it('publishes the letter and archives the client immediately', function () {
     Storage::fake('local');
     $admin = exitTestUser('admin-rps');
-    $head = exitTestUser('kepala-rps');
+    exitTestUser('admin-rps');
     $client = exitTestClient();
 
     $this->actingAs($admin)
@@ -63,76 +60,65 @@ it('C4: status klien berubah otomatis & diarsipkan saat surat disubmit, tanpa me
         ->and($client->no_hp_penanggung_jawab)->toBe('081234567890');
 
     $document = ClientExitDocument::firstOrFail();
-    expect($document->status)->toBe('menunggu_persetujuan');
-
-    $notification = $head->notifications()->firstOrFail();
-    expect($notification->type)->toBe(SuratKeluarNotification::class)
-        ->and($notification->data['event'])->toBe(SuratKeluarNotification::DIAJUKAN)
-        ->and($notification->data['document_id'])->toBe($document->id)
-        ->and($notification->data['url'])->toBe(route('exit-documents.show', $document));
+    expect($document->status)->toBe('selesai')
+        ->and($document->approved_by)->toBeNull()
+        ->and($document->approved_at)->toBeNull()
+        ->and($admin->notifications()->count())->toBe(0);
 
     expect($document->pdf_path)->toBe('exit-documents/' . $document->id . '.pdf');
     Storage::disk('local')->assertExists($document->pdf_path);
     expect(Storage::disk('local')->get($document->pdf_path))->toStartWith('%PDF-');
 });
 
-it('C4: approve() hanya menandatangani surat, tidak mengubah status klien (sudah berubah sejak submit)', function () {
+it('does not expose approval or rejection pages and actions', function () {
     $admin = exitTestUser('admin-rps');
-    $head = exitTestUser('kepala-rps');
-    $client = exitTestClient();
 
-    $this->actingAs($admin)
-        ->post(route('exit-documents.store', $client), exitDocumentPayload())
-        ->assertRedirect(route('exit-documents.mine'));
-    $document = ClientExitDocument::firstOrFail();
-    $statusSebelumApprove = $client->refresh()->status;
-
-    $this->actingAs($head)->patch(route('exit-documents.approve', $document))
-        ->assertSessionHasNoErrors();
-
-    expect($document->refresh()->status)->toBe('disetujui')
-        ->and($client->refresh()->status)->toBe($statusSebelumApprove);
-
-    $notification = $admin->notifications()->firstOrFail();
-    expect($notification->type)->toBe(SuratKeluarNotification::class)
-        ->and($notification->data['event'])->toBe(SuratKeluarNotification::DISETUJUI)
-        ->and($notification->data['document_id'])->toBe($document->id)
-        ->and($notification->data['url'])->toBe(route('exit-documents.mine'));
+    $this->actingAs($admin)->get('/exit-documents')->assertNotFound();
+    $this->actingAs($admin)->patch('/exit-documents/1/approve')->assertNotFound();
+    $this->actingAs($admin)->patch('/exit-documents/1/reject')->assertNotFound();
 });
 
-it('C4: surat yang ditolak Kepala RPS mengembalikan klien ke Dalam Penanganan (bukan arsip)', function () {
+it('converts pending legacy letters into published letters', function () {
+    $admin = exitTestUser('admin-rps');
+    $client = exitTestClient();
+    $document = ClientExitDocument::create(array_merge(exitDocumentPayload(), [
+        'client_id' => $client->id,
+        'created_by' => $admin->id,
+        'status' => 'menunggu_persetujuan',
+    ]));
+
+    $migration = require base_path('database/migrations/2026_10_14_000002_remove_exit_document_approval_workflow.php');
+    $migration->up();
+
+    expect($document->fresh()->status)->toBe('selesai');
+});
+
+it('allows an old rejected letter to be corrected and directly published', function () {
     Storage::fake('local');
     $admin = exitTestUser('admin-rps');
-    $head = exitTestUser('kepala-rps');
     $client = exitTestClient();
 
-    $this->actingAs($admin)->post(route('exit-documents.store', $client), exitDocumentPayload());
-    $document = ClientExitDocument::firstOrFail();
-
-    $this->actingAs($head)->patch(route('exit-documents.reject', $document), [
-        'catatan_penolakan' => 'Tujuan rujukan belum jelas, mohon dilengkapi.',
-    ])->assertSessionHasNoErrors();
-
-    $client->refresh();
-    expect($document->refresh()->status)->toBe('ditolak')
-        ->and($client->status)->toBe(Client::STATUS_PENANGANAN)
-        ->and($client->is_archived)->toBeFalse();
+    $document = ClientExitDocument::create(array_merge(exitDocumentPayload(), [
+        'client_id' => $client->id,
+        'created_by' => $admin->id,
+        'status' => 'ditolak',
+        'catatan_penolakan' => 'Tujuan rujukan belum jelas.',
+    ]));
 
     $this->actingAs($admin)
         ->patch(route('exit-documents.resubmit', $document), exitDocumentPayload())
         ->assertSessionHasNoErrors();
 
     $client->refresh();
-    expect($document->refresh()->status)->toBe('menunggu_persetujuan')
+    expect($document->refresh()->status)->toBe('selesai')
         ->and($client->status)->toBe(Client::STATUS_DIRUJUK)
         ->and($client->is_archived)->toBeTrue()
         ->and($client->archived_by)->toBe($admin->id)
         ->and($client->archived_at)->not->toBeNull();
 
-    expect($head->notifications()->count())->toBe(2);
 });
 
-it('allows the document creator and kepala-rps to download the PDF only after approval', function () {
+it('allows admins to print and download the PDF immediately after publication', function () {
     Storage::fake('local');
     $admin = exitTestUser('admin-rps');
     $otherAdmin = exitTestUser('admin-rps');
@@ -141,11 +127,6 @@ it('allows the document creator and kepala-rps to download the PDF only after ap
 
     $this->actingAs($admin)->post(route('exit-documents.store', $client), exitDocumentPayload());
     $document = ClientExitDocument::firstOrFail();
-
-    $this->actingAs($admin)->get(route('exit-documents.pdf', $document))->assertForbidden();
-    $this->actingAs($head)->get(route('exit-documents.pdf', $document))->assertForbidden();
-
-    $this->actingAs($head)->patch(route('exit-documents.approve', $document))->assertSessionHasNoErrors();
 
     $document->refresh();
     $this->actingAs($admin)
@@ -163,6 +144,12 @@ it('allows the document creator and kepala-rps to download the PDF only after ap
         ->assertHeader('Content-Type', 'application/pdf')
         ->assertHeader('Content-Length', (string) Storage::disk('local')->size($document->pdf_path));
 
+    $this->actingAs($admin)
+        ->get(route('exit-documents.print', $document))
+        ->assertOk()
+        ->assertSee('telah diproses untuk')
+        ->assertDontSee('telah disetujui');
+
     Storage::disk('local')->put($document->pdf_path, '%PDF-OLD-FORMAT');
     $this->actingAs($admin)->get(route('exit-documents.pdf', $document))->assertOk();
     expect(Storage::disk('local')->get($document->pdf_path))
@@ -175,10 +162,10 @@ it('allows the document creator and kepala-rps to download the PDF only after ap
         ->assertHeader('Content-Range', 'bytes 0-4/' . Storage::disk('local')->size($document->pdf_path));
 
     $this->actingAs($head)->get(route('exit-documents.pdf', $document))->assertOk();
-    $this->actingAs($otherAdmin)->get(route('exit-documents.pdf', $document))->assertForbidden();
+    $this->actingAs($otherAdmin)->get(route('exit-documents.pdf', $document))->assertOk();
 });
 
-it('shows the protected client photo to kepala-rps on the letter review page', function () {
+it('shows the protected client photo on the published letter detail page', function () {
     Storage::fake('local');
     $admin = exitTestUser('admin-rps');
     $head = exitTestUser('kepala-rps');
@@ -196,7 +183,7 @@ it('shows the protected client photo to kepala-rps on the letter review page', f
     $this->actingAs($head)->get(route('clients.photo', $client))->assertOk();
 });
 
-it('embeds the client photo in the generated approval PDF', function () {
+it('embeds the client photo in the generated final PDF', function () {
     Storage::fake('local');
     $admin = exitTestUser('admin-rps');
     $client = exitTestClient(['foto_klien' => 'client-photos/client.jpg']);
@@ -247,26 +234,4 @@ it('rejects duplicate letter numbers and responsible-party phone numbers', funct
         ->assertSessionHasErrors('no_hp_penanggung_jawab');
 
     expect(ClientExitDocument::count())->toBe(1);
-});
-
-it('notifies the admin who created the letter when kepala-rps rejects it', function () {
-    Storage::fake('local');
-    $admin = exitTestUser('admin-rps');
-    $otherAdmin = exitTestUser('admin-rps');
-    $head = exitTestUser('kepala-rps');
-    $client = exitTestClient();
-
-    $this->actingAs($admin)->post(route('exit-documents.store', $client), exitDocumentPayload());
-    $document = ClientExitDocument::firstOrFail();
-
-    $this->actingAs($head)->patch(route('exit-documents.reject', $document), [
-        'catatan_penolakan' => 'Tujuan rujukan belum jelas.',
-    ])->assertSessionHasNoErrors();
-
-    expect($admin->notifications()->count())->toBe(1)
-        ->and($admin->notifications()->first()->data['event'])->toBe(SuratKeluarNotification::DITOLAK)
-        ->and($admin->notifications()->first()->data['message'])->toContain('Tujuan rujukan belum jelas.')
-        ->and($admin->notifications()->first()->data['url'])->toBe(route('exit-documents.mine'))
-        ->and($otherAdmin->notifications()->count())->toBe(0)
-        ->and($head->notifications()->count())->toBe(1); // hanya notifikasi "diajukan" sebelumnya
 });

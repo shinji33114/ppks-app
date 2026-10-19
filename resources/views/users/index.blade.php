@@ -34,7 +34,9 @@
                         <tr>
                             <td>{{ $user->name }}</td>
                             <td>{{ $user->email }}</td>
-                            <td>{{ $user->getRoleNames()->join(', ') ?: 'Belum ada role' }}</td>
+                            <td>
+                                {{ $user->getRoleNames()->map(fn ($role) => $role === 'super-admin' ? 'Super Admin' : 'Admin')->join(', ') ?: 'Belum ada role' }}
+                            </td>
                             <td>
                                 <span class="badge bg-{{ $user->is_active ? 'success' : 'secondary' }}">
                                     {{ $user->is_active ? 'Aktif' : 'Nonaktif' }}

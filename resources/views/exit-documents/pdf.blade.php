@@ -25,13 +25,12 @@
         .client-photo { max-height: 118px; max-width: 83px; }
         .photo-placeholder { color: #666; font-size: 7pt; height: 110px; padding-top: 8px; }
         .signatures { margin-top: 18px; }
-        .signatures td { text-align: center; vertical-align: top; width: 50%; }
+        .signatures td { text-align: center; vertical-align: top; }
         .signature-space { height: 45px; }
         .name { font-weight: bold; text-decoration: underline; }
     </style>
 </head>
 <body>
-    @php($approved = $document->status === 'disetujui')
     @php($assessment = $document->client->assessment)
 
     <header class="header">
@@ -40,7 +39,7 @@
         <p>Sistem Pelayanan Penanganan Pemerlu Pelayanan Kesejahteraan Sosial</p>
     </header>
 
-    <div class="status">{{ $approved ? 'DISETUJUI KEPALA RPS' : 'DRAF - MOHON PERSETUJUAN KEPALA RPS' }}</div>
+    <div class="status">SURAT TELAH DITERBITKAN</div>
 
     <h3>{{ $document->type === 'rujukan' ? 'SURAT RUJUKAN' : 'SURAT KELUAR / PEMULANGAN' }}</h3>
 
@@ -50,7 +49,7 @@
                 <table class="meta">
                     <tr><td>Nomor</td><td>: {{ $document->nomor_surat ?: '-' }}</td></tr>
                     <tr><td>Tanggal</td><td>: {{ $document->tanggal_surat->format('d-m-Y') }}</td></tr>
-                    <tr><td>Kepada</td><td>: Yth. Kepala RPS</td></tr>
+                    <tr><td>Kepada</td><td>: Yth. {{ $document->tujuan }}</td></tr>
                     <tr><td>Tujuan surat</td><td>: {{ $document->tujuan }}</td></tr>
                 </table>
             </td>
@@ -67,7 +66,7 @@
     </table>
 
     <p>Dengan hormat,</p>
-    <p>Melalui surat ini kami mengajukan permohonan persetujuan {{ $document->type === 'rujukan' ? 'rujukan' : 'keluar/pemulangan' }} untuk klien berikut:</p>
+    <p>Melalui surat ini kami menerbitkan keterangan {{ $document->type === 'rujukan' ? 'rujukan' : 'keluar/pemulangan' }} untuk klien berikut:</p>
 
     <table class="identity">
         <tr><td>Nama Lengkap</td><td>{{ $document->client->nama_lengkap }}</td></tr>
@@ -83,24 +82,15 @@
         <p>{{ $document->keterangan }}</p>
     @endif
 
-    <p>Demikian permohonan ini disampaikan untuk mendapatkan persetujuan Kepala RPS.</p>
+    <p>Demikian surat ini dibuat untuk dapat dipergunakan sebagaimana mestinya.</p>
 
     <table class="signatures">
         <tr>
-            <td>
-                Diajukan oleh, Admin RPS
+            <td colspan="2">
+                {{ $document->tanggal_surat->translatedFormat('d F Y') }}<br>
+                Admin
                 <div class="signature-space"></div>
-                <div class="name">{{ $document->creator->name ?? 'Admin RPS' }}</div>
-            </td>
-            <td>
-                Persetujuan Kepala RPS
-                <div class="signature-space"></div>
-                @if ($approved)
-                    <div class="name">{{ $document->approver->name ?? 'Kepala RPS' }}</div>
-                    <div>{{ $document->approved_at?->format('d-m-Y H:i') }}</div>
-                @else
-                    <div>____________________________</div>
-                @endif
+                <div class="name">{{ $document->creator->name ?? 'Admin' }}</div>
             </td>
         </tr>
     </table>

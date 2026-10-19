@@ -5,7 +5,10 @@
 
 @section('content')
     <div class="card p-4">
-        <div class="alert alert-warning">Alasan penolakan: {{ $document->catatan_penolakan }}</div>
+        <div class="alert alert-warning">
+            Surat lama ini ditolak sebelum tahap persetujuan dihapus. Perbaiki datanya lalu terbitkan kembali.
+            <br>Catatan sebelumnya: {{ $document->catatan_penolakan }}
+        </div>
         <form method="POST" action="{{ route('exit-documents.resubmit', $document) }}">
             @csrf @method('PATCH')
             <div class="mb-3">
@@ -42,7 +45,7 @@
                 <input name="no_hp_penanggung_jawab" value="{{ old('no_hp_penanggung_jawab', $document->no_hp_penanggung_jawab) }}" class="form-control-custom" required>
             </div>
             <a href="{{ route('exit-documents.mine') }}" class="btn btn-light">Batal</a>
-            <button class="btn-custom btn-custom-primary">Ajukan Ulang</button>
+            <button class="btn-custom btn-custom-primary">Terbitkan Kembali</button>
         </form>
     </div>
 @endsection

@@ -8,16 +8,14 @@ use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
-    foreach (['petugas-piket', 'peksos', 'admin-rps', 'kepala-rps'] as $role) {
-        Role::create(['name' => $role]);
-    }
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
 });
 
 // Nama helper diberi awalan "rev" supaya tidak bentrok dengan helper di file tes lain.
 function revUser(string $role): User
 {
     $user = User::factory()->create(['is_active' => true]);
-    $user->assignRole($role);
+    $user->assignRole('admin');
 
     return $user;
 }
@@ -243,14 +241,14 @@ it('C2: revisi ditolak untuk klien yang sudah diarsipkan', function () {
     expect(ClientAssessment::first()->simpulan_awal)->toBe('Simpulan lama.');
 });
 
-it('C2: role selain Peksos tidak dapat membuka form edit', function () {
-    $petugas = revUser('petugas-piket');
+it('C2: Admin dapat membuka form edit assessment', function () {
+    $admin = revUser('admin');
     $client = revClient(['status' => Client::STATUS_ASSESSMENT]);
     ClientAssessment::create(['client_id' => $client->id, 'simpulan_awal' => 'Simpulan lama.']);
 
-    $this->actingAs($petugas)
+    $this->actingAs($admin)
         ->get(route('assessment.edit', $client))
-        ->assertForbidden();
+        ->assertOk();
 });
 
 // ---------------------------------------------------------------- F3

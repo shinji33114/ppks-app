@@ -1,9 +1,12 @@
 <?php
 
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 
 it('memakai foto Alun-Alun sebagai latar halaman setelah login', function () {
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     $user = User::factory()->create();
+    $user->assignRole('admin');
 
     $this->actingAs($user)
         ->get(route('dashboard'))
@@ -15,7 +18,9 @@ it('memakai foto Alun-Alun sebagai latar halaman setelah login', function () {
 });
 
 it('menampilkan avatar kosong pada semua bagian profil dashboard', function () {
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     $user = User::factory()->create();
+    $user->assignRole('admin');
 
     $this->actingAs($user)
         ->get(route('dashboard'))

@@ -11,12 +11,7 @@
             <p class="mb-0">
                 Anda login sebagai:
                 @php
-                    $roleLabels = [
-                        'petugas-piket' => 'Petugas Piket / Front Office',
-                        'peksos' => 'Pekerja Sosial',
-                        'admin-rps' => 'Admin Penanganan / RPS',
-                        'kepala-rps' => 'Kepala RPS',
-                    ];
+                    $roleLabels = ['admin' => 'Admin', 'super-admin' => 'Super Admin'];
                 @endphp
                 @foreach (auth()->user()->getRoleNames() as $role)
                     <span class="badge bg-success">{{ $roleLabels[$role] ?? $role }}</span>
@@ -25,8 +20,8 @@
         </div>
     </div>
 
-    {{-- C5: ringkasan pekerjaan yang menunggu, langsung terlihat di dashboard Peksos --}}
-    @role('peksos')
+    {{-- Ringkasan tahap assessment yang menunggu --}}
+    @hasanyrole('admin|super-admin')
         @php($pendingCount = \App\Models\Client::where('status', \App\Models\Client::STATUS_DRAFT)->count())
         <div class="col-md-6">
             <div class="card border-light shadow-sm p-4">
@@ -47,10 +42,10 @@
                 @endif
             </div>
         </div>
-    @endrole
+    @endhasanyrole
 
-    {{-- Ringkasan serupa untuk Admin RPS: klien yang sedang berjalan di Tahap 3 --}}
-    @role('admin-rps')
+    {{-- Ringkasan klien yang sedang berjalan di Tahap 3 --}}
+    @hasanyrole('admin|super-admin')
         @php($activeCount = \App\Models\Client::whereIn('status', [\App\Models\Client::STATUS_ASSESSMENT, \App\Models\Client::STATUS_PENANGANAN])->count())
         <div class="col-md-6">
             <div class="card border-light shadow-sm p-4">
@@ -71,10 +66,9 @@
                 @endif
             </div>
         </div>
-    @endrole
+    @endhasanyrole
 
-  {{-- SOP ditampilkan di dashboard Petugas Piket, Peksos, dan Admin RPS saja --}}
-   @hasanyrole('petugas-piket|peksos|admin-rps')
+   @hasanyrole('admin|super-admin')
        @include('partials.sop-dashboard')
    @endhasanyrole
 </div>

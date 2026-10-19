@@ -1,6 +1,6 @@
 @extends('layouts.spark')
 
-@section('page-title', 'Pemeriksaan Surat')
+@section('page-title', 'Detail Surat')
 @section('page-subtitle', $document->client->nama_lengkap)
 
 @section('content')
@@ -30,7 +30,7 @@
         <div class="col-lg-7">
             <div class="card p-4">
                 <h5 class="card-title mb-3">Detail Surat</h5>
-                @if ($document->status === 'disetujui' && $document->pdf_path)
+                @if (in_array($document->status, ['selesai', 'disetujui'], true) && $document->pdf_path)
                     <a href="{{ route('exit-documents.pdf', ['document' => $document->id, 'v' => $document->updated_at->timestamp]) }}" class="btn btn-outline-primary mb-3">
                         <i class="bi bi-file-earmark-pdf me-1"></i> Unduh PDF Surat
                     </a>
@@ -43,26 +43,15 @@
                     <dt class="col-sm-4">Tanggal keluar</dt><dd class="col-sm-8">{{ $document->tanggal_keluar->translatedFormat('d F Y') }}</dd>
                     <dt class="col-sm-4">Penanggung jawab</dt><dd class="col-sm-8">{{ $document->no_hp_penanggung_jawab }}</dd>
                     <dt class="col-sm-4">Keterangan</dt><dd class="col-sm-8">{{ $document->keterangan ?: '-' }}</dd>
-                    <dt class="col-sm-4">Diajukan oleh</dt><dd class="col-sm-8">{{ $document->creator->name }}</dd>
+                    <dt class="col-sm-4">Diterbitkan oleh</dt><dd class="col-sm-8">{{ $document->creator->name }}</dd>
                 </dl>
 
-                @if ($document->status === 'menunggu_persetujuan')
-                    <div class="border-top pt-3">
-                        <form method="POST" action="{{ route('exit-documents.approve', $document) }}" class="d-inline">
-                            @csrf @method('PATCH')
-                            <button class="btn btn-success" onclick="return confirm('Setujui surat ini?')">Setujui Surat</button>
-                        </form>
-                        <form method="POST" action="{{ route('exit-documents.reject', $document) }}" class="mt-3">
-                            @csrf @method('PATCH')
-                            <label class="form-label-custom">Alasan penolakan</label>
-                            <textarea name="catatan_penolakan" class="form-control-custom mb-2" required></textarea>
-                            <button class="btn btn-danger">Tolak Surat</button>
-                        </form>
+                @if ($document->status === 'ditolak')
+                    <div class="alert alert-warning mb-0">
+                        Surat ini ditolak sebelum alur persetujuan dihapus. Perbaiki melalui halaman Surat Saya.
                     </div>
-                @elseif ($document->status === 'ditolak')
-                    <div class="alert alert-danger mb-0">Alasan penolakan: {{ $document->catatan_penolakan }}</div>
                 @else
-                    <div class="alert alert-success">Surat sudah disetujui. Data surat terkunci.</div>
+                    <div class="alert alert-success">Surat telah diterbitkan. Data surat terkunci.</div>
                     <a href="{{ route('exit-documents.print', $document) }}" target="_blank"
                        class="btn btn-primary">
                         <i class="bi bi-printer me-1"></i> Preview & Cetak Surat

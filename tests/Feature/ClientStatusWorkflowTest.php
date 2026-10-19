@@ -6,15 +6,12 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
-    Role::create(['name' => 'admin-rps']);
-    Role::create(['name' => 'kepala-rps']);
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
 });
 
-it('closes the case at submit (C4) and only signs the letter on head approval', function () {
+it('closes the case and publishes the letter as soon as it is submitted', function () {
     $admin = User::factory()->create();
-    $admin->assignRole('admin-rps');
-    $head = User::factory()->create();
-    $head->assignRole('kepala-rps');
+    $admin->assignRole('admin');
 
     $client = Client::create([
         'tanggal_masuk' => '2026-09-20',
@@ -44,11 +41,7 @@ it('closes the case at submit (C4) and only signs the letter on head approval', 
         ->and($client->is_archived)->toBeTrue();
 
     $document = ClientExitDocument::firstOrFail();
-    $this->actingAs($head)
-        ->patch(route('exit-documents.approve', $document))
-        ->assertRedirect();
-
     expect($client->refresh()->status)->toBe(Client::STATUS_DIRUJUK)
         ->and($client->status_label)->toBe('Dirujuk')
-        ->and($document->refresh()->status)->toBe('disetujui');
+        ->and($document->refresh()->status)->toBe('selesai');
 });

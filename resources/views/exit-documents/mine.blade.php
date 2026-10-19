@@ -1,13 +1,13 @@
 @extends('layouts.spark')
 
 @section('page-title', 'Surat Saya')
-@section('page-subtitle', 'Pantau pengajuan surat keluar dan rujukan')
+@section('page-subtitle', 'Lihat dan unduh surat keluar atau rujukan yang telah diterbitkan')
 
 @section('content')
     @if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
     @if (session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
     <div class="table-card-custom">
-        <div class="table-header-control"><h5 class="card-title mb-0">Riwayat Pengajuan</h5></div>
+        <div class="table-header-control"><h5 class="card-title mb-0">Riwayat Surat</h5></div>
         <div class="table-responsive">
             <table class="table-custom">
                 <thead><tr><th>Klien</th><th>Jenis</th><th>Tujuan</th><th>Status</th><th>Aksi</th></tr></thead>
@@ -17,14 +17,20 @@
                             <td>{{ $document->client->nama_lengkap }}</td>
                             <td>{{ $document->type === 'rujukan' ? 'Surat Rujukan' : 'Surat Keluar' }}</td>
                             <td>{{ $document->tujuan }}</td>
-                            <td>{{ str_replace('_', ' ', ucfirst($document->status)) }}</td>
                             <td>
-                                @if ($document->status === 'disetujui' && $document->pdf_path)
+                                @if (in_array($document->status, ['selesai', 'disetujui', 'menunggu_persetujuan'], true))
+                                    Selesai
+                                @else
+                                    Perlu diperbaiki
+                                @endif
+                            </td>
+                            <td>
+                                @if (in_array($document->status, ['selesai', 'disetujui'], true) && $document->pdf_path)
                                     <a href="{{ route('exit-documents.pdf', ['document' => $document->id, 'v' => $document->updated_at->timestamp]) }}" class="btn btn-sm btn-outline-primary">Unduh PDF</a>
                                 @endif
                                 @if ($document->status === 'ditolak')
                                     <a href="{{ route('exit-documents.edit', $document) }}" class="btn btn-sm btn-warning">Perbaiki</a>
-                                @elseif ($document->status !== 'disetujui' || ! $document->pdf_path)
+                                @elseif (! in_array($document->status, ['selesai', 'disetujui'], true) || ! $document->pdf_path)
                                     <span class="text-muted">-</span>
                                 @endif
                             </td>

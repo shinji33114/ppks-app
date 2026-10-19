@@ -91,6 +91,14 @@
                 </div>
             @endif
 
+            @hasanyrole('admin|super-admin')
+                @if (! $isClosedCase && $client->status === \App\Models\Client::STATUS_DRAFT)
+                    <a href="{{ route('assessment.create', $client) }}" class="btn-custom btn-custom-primary w-100 mb-3">
+                        <i class="bi bi-clipboard2-pulse me-1"></i> Mulai Assessment
+                    </a>
+                @endif
+            @endhasanyrole
+
             <h5 class="mb-1">{{ $client->nama_lengkap }}</h5>
             @if ($client->nama_alias)
                 <div class="text-muted small mb-2">alias {{ $client->nama_alias }}</div>
@@ -99,38 +107,38 @@
             <span class="badge-table {{ $client->status_badge_class }} d-inline-flex mb-3">{{ $client->status_label }}</span>
 
             @unless ($isClosedCase)
-                @role('peksos')
+                @hasanyrole('admin|super-admin')
                     @if ($client->status === 'assessment')
                         <a href="{{ route('assessment.edit', $client->id) }}" class="btn-custom btn-custom-primary w-100 mb-2">
                             <i class="bi bi-pencil-square me-1"></i> Edit Assessment
                         </a>
                     @endif
-                @endrole
+                @endhasanyrole
 
-                @role('petugas-piket')
+                @hasanyrole('admin|super-admin')
                     @if ($client->isStageOneEditable())
                         <a href="{{ route('clients.edit', $client) }}" class="btn-custom btn-custom-secondary w-100 mb-2">
                             <i class="bi bi-pencil me-1"></i> Edit Data Tahap 1
                         </a>
                     @endif
-                @endrole
+                @endhasanyrole
 
-                @role('admin-rps')
+                @hasanyrole('admin|super-admin')
                     @if (in_array($client->status, ['assessment', 'penanganan']))
                         <a href="{{ route('penanganan.index', $client->id) }}" class="btn-custom btn-custom-primary w-100 mb-2">
                             <i class="bi bi-clipboard2-pulse me-1"></i> Kelola Penanganan
                         </a>
                     @endif
-                @endrole
+                @endhasanyrole
             @endunless
 
-            @role('kepala-rps')
+            @hasanyrole('admin|super-admin')
                 @if ($isClosedCase)
         <a href="{{ route('clients.revisi.edit', $client->id) }}" class="btn-custom btn-custom-secondary w-100 mb-2">
             <i class="bi bi-pencil-square me-1"></i> Revisi Data Arsip
         </a>
     @endif
-@endrole
+@endhasanyrole
         </div>
     </div>
 
@@ -198,7 +206,7 @@
                     <div class="d-flex align-items-start gap-2">
                         <i class="bi bi-info-circle-fill text-warning mt-1"></i>
                         <p class="mb-0 text-muted small">
-                            Data ini masih bisa diedit oleh Petugas Piket sampai Peksos mulai mengisi Tahap 2,
+                            Data ini masih bisa diedit Admin sampai Admin mulai mengisi Tahap 2,
                             atau maksimal 1x24 jam sejak dicatat.
                         </p>
                     </div>
@@ -287,7 +295,7 @@
 
             @php($exitDoc = $client->exitDocuments->sortByDesc('created_at')->first())
             @if ($exitDoc)
-                @php($statusMap = ['menunggu_persetujuan' => ['Menunggu Persetujuan Kepala RPS', 'pending'], 'disetujui' => ['Disetujui', 'success'], 'ditolak' => ['Ditolak, menunggu perbaikan Admin RPS', 'failed']])
+                @php($statusMap = ['selesai' => ['Selesai', 'success'], 'menunggu_persetujuan' => ['Selesai', 'success'], 'disetujui' => ['Selesai', 'success'], 'ditolak' => ['Ditolak, perlu diperbaiki', 'failed']])
                 <hr>
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
@@ -306,7 +314,7 @@
 
 </div>
 
-@role('kepala-rps')
+@hasanyrole('admin|super-admin')
     @if ($client->revisions->isNotEmpty())
         <div class="card border-light shadow-sm p-4 mb-4">
             <h5 class="card-title mb-3"><i class="bi bi-clock-history me-2"></i>Riwayat Revisi Data Resmi</h5>
@@ -326,7 +334,7 @@
             @endforeach
         </div>
     @endif
-@endrole
+@endhasanyrole
 
 <div class="mt-2">
     <a href="{{ route('clients.index') }}" class="btn-custom btn-custom-secondary">

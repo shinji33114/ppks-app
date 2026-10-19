@@ -23,7 +23,9 @@
                     <select id="role" name="role" class="form-control-custom" required>
                         <option value="">- Pilih role -</option>
                         @foreach ($roles as $role)
-                            <option value="{{ $role }}" @selected(old('role') === $role)>{{ $role }}</option>
+                            <option value="{{ $role }}" @selected(old('role') === $role)>
+                                {{ $role === 'super-admin' ? 'Super Admin' : 'Admin' }}
+                            </option>
                         @endforeach
                     </select>
                     @error('role')<div class="text-danger small">{{ $message }}</div>@enderror

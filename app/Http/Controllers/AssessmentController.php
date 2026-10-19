@@ -30,7 +30,7 @@ class AssessmentController extends Controller
     }
 
     /**
-     * C2: assessment yang sudah tersimpan masih boleh direvisi Peksos
+     * C2: assessment yang sudah tersimpan masih boleh direvisi Admin
      * selama klien belum masuk tahap penanganan dan belum diarsipkan.
      */
     private function canEditAssessment(Client $client): bool
@@ -51,7 +51,7 @@ class AssessmentController extends Controller
         }
 
         return [
-            // C1: Peksos boleh memperbarui identitas (nama, NIK, alamat KTP)
+            // C1: Admin boleh memperbarui identitas (nama, NIK, alamat KTP)
             'nama_lengkap' => 'required|string|max:255',
             'nik' => ['required', 'digits:16', $nikUnique],
             'tempat_lahir' => 'required|string|max:255',
@@ -171,7 +171,7 @@ class AssessmentController extends Controller
                 ->with('error', 'Klien ini sudah melewati tahap assessment atau sudah diarsipkan.');
         }
 
-        // Peksos mulai mengisi Tahap 2 -> data Tahap 1 terkunci
+        // Admin mulai mengisi Tahap 2 -> data Tahap 1 terkunci
         if ($client->locked_at === null) {
             $client->update(['locked_at' => now()]);
         }
@@ -207,7 +207,7 @@ class AssessmentController extends Controller
         }
         $client->update($clientData);
 
-        User::role('admin-rps')->each(fn (User $admin) => $admin->notify(new AssessmentSelesai($client)));
+        User::role(['admin', 'super-admin'])->each(fn (User $admin) => $admin->notify(new AssessmentSelesai($client)));
 
         return redirect()->route('clients.show', $client->id)
             ->with('success', 'Assessment berhasil disimpan.');

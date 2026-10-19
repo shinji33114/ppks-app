@@ -1,7 +1,6 @@
 {{--
     Standard Operating Procedure (SOP) Karyawan Dinas Sosial, ditampilkan di dashboard
-    supaya petugas punya rujukan cepat. Ditampilkan untuk role: petugas-piket, peksos,
-    admin-rps (lihat pemanggilan @hasanyrole di dashboard.blade.php).
+    supaya Admin punya rujukan cepat. Ditampilkan untuk satu-satunya role aplikasi: Admin.
 --}}
 <div class="col-12">
     <div class="card border-light shadow-sm p-4">

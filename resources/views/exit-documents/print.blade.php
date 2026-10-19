@@ -63,7 +63,7 @@
             <p>Dengan hormat,</p>
             <p>
                 Dengan ini menerangkan bahwa klien berikut telah mendapatkan pelayanan di
-                Rumah Perlindungan Sosial PPKS dan telah disetujui untuk
+                Rumah Perlindungan Sosial PPKS dan telah diproses untuk
                 {{ $document->type === 'rujukan' ? 'dirujuk ke instansi tujuan' : 'keluar atau kembali kepada keluarga' }}.
             </p>
 
@@ -88,9 +88,9 @@
 
         <div class="signature">
             <div>{{ $document->tanggal_surat->translatedFormat('d F Y') }}</div>
-            <div>Kepala RPS</div>
+            <div>Admin</div>
             <div class="signature-space"></div>
-            <strong>{{ $document->approver?->name ?: 'Kepala RPS' }}</strong>
+            <strong>{{ $document->creator?->name ?: 'Admin' }}</strong>
         </div>
     </main>
 </body>

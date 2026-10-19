@@ -6,16 +6,14 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
-    foreach (['petugas-piket', 'peksos', 'admin-rps', 'kepala-rps'] as $role) {
-        Role::create(['name' => $role]);
-    }
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
 });
 
 function makeUser(string $role, array $attrs = []): User
 {
     // is_active diisi eksplisit: default true hanya ada di database, tidak di objek model yang baru dibuat
     $user = User::factory()->create(array_merge(['is_active' => true], $attrs));
-    $user->assignRole($role);
+    $user->assignRole('admin');
 
     return $user;
 }
@@ -37,6 +35,34 @@ function assessmentPayload(array $override = []): array
     // Semua field assessment wajib diisi; payload lengkap ada di tests/Pest.php.
     return payloadAssessmentLengkap($override);
 }
+
+it('renders the refreshed assessment and handling pages', function () {
+    $admin = makeUser('admin');
+    $waitingClient = makeClient(['status' => Client::STATUS_DRAFT]);
+    $handlingClient = makeClient([
+        'status' => Client::STATUS_ASSESSMENT,
+        'nama_lengkap' => 'Klien Penanganan',
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('assessment.index'))
+        ->assertOk()
+        ->assertSee('Antrean assessment')
+        ->assertSee($waitingClient->nama_lengkap);
+
+    $this->actingAs($admin)
+        ->get(route('penanganan.dashboard'))
+        ->assertOk()
+        ->assertSee('Klien siap ditangani')
+        ->assertSee($handlingClient->nama_lengkap);
+
+    $this->actingAs($admin)
+        ->get(route('penanganan.index', $handlingClient))
+        ->assertOk()
+        ->assertSee('Catat tindakan')
+        ->assertSee('Riwayat tindakan')
+        ->assertSee('Surat keluar / rujukan');
+});
 
 // ---------------------------------------------------------------- A1
 it('A1: menolak assessment untuk klien yang sudah diarsipkan (POST langsung)', function () {
@@ -142,9 +168,8 @@ it('A5: membuka form assessment benar-benar menyimpan locked_at', function () {
         ->and($client->isStageOneEditable())->toBeFalse();
 });
 
-it('A5: persetujuan surat menyimpan rujukan, tanggal keluar, dan no HP ke klien', function () {
+it('A5: penerbitan surat langsung menyimpan rujukan, tanggal keluar, dan no HP ke klien', function () {
     $admin = makeUser('admin-rps');
-    $head = makeUser('kepala-rps');
     $client = makeClient(['status' => Client::STATUS_PENANGANAN]);
 
     $this->actingAs($admin)->post(route('exit-documents.store', $client), [
@@ -155,15 +180,13 @@ it('A5: persetujuan surat menyimpan rujukan, tanggal keluar, dan no HP ke klien'
         'no_hp_penanggung_jawab' => '081234567890',
     ]);
 
-    $document = \App\Models\ClientExitDocument::firstOrFail();
-    $this->actingAs($head)->patch(route('exit-documents.approve', $document));
-
     $client->refresh();
     expect($client->rujukan)->toBe('Panti Sosial Harapan')
         ->and($client->tanggal_keluar->toDateString())->toBe('2026-09-24')
         ->and($client->no_hp_penanggung_jawab)->toBe('081234567890')
         ->and($client->status_akhir)->toBe('dirujuk')
-        ->and($client->is_archived)->toBeTrue();
+        ->and($client->is_archived)->toBeTrue()
+        ->and(\App\Models\ClientExitDocument::firstOrFail()->status)->toBe('selesai');
 });
 
 // ---------------------------------------------------------------- B1

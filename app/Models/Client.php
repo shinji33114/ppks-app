@@ -85,12 +85,12 @@ class Client extends Model
         return false;
     }
 
-    // Peksos sudah mulai assessment — data Tahap 1 otomatis terkunci
+    // Admin sudah mulai assessment — data Tahap 1 otomatis terkunci
     if ($this->locked_at !== null) {
         return false;
     }
 
-    // Sudah lewat 24 jam sejak diregistrasi, meski Peksos belum mulai assessment
+    // Sudah lewat 24 jam sejak diregistrasi, meski assessment belum dimulai
     if ($this->created_at->addDay()->isPast()) {
         return false;
     }

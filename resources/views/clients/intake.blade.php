@@ -1,7 +1,7 @@
 @extends('layouts.spark')
 
 @section('page-title', 'Registrasi Klien Baru')
-@section('page-subtitle', 'Tahap 1 — diisi oleh Petugas Piket')
+@section('page-subtitle', 'Tahap 1 — Registrasi Awal')
 
 @section('content')
 <div class="row g-4">
@@ -124,8 +124,8 @@
                 <li>Semua kolom wajib diisi. Jika datanya tidak ada, isi dengan tanda <strong>-</strong>.</li>
                 <li>Nama diisi <strong>-</strong> jika identitas klien belum diketahui (akan tercatat "Tanpa Nama / X").</li>
                 <li>Foto klien wajib diunggah. Data dukung wajib diunggah, atau centang "Tidak ada data dukung".</li>
-                <li>Setelah disimpan, Peksos akan otomatis mendapat notifikasi untuk melanjutkan ke tahap Assessment.</li>
-                <li>Data ini akan terkunci begitu Peksos mulai mengisi Tahap 2.</li>
+                <li>Setelah disimpan, Admin akan mendapat notifikasi untuk melanjutkan ke tahap Assessment.</li>
+                <li>Data ini akan terkunci begitu Admin mulai mengisi Tahap 2.</li>
             </ul>
         </div>
     </div>

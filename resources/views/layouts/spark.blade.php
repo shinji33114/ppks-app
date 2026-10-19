@@ -120,23 +120,26 @@
          ========================================== -->
   <div class="sidebar-wrapper" id="sidebar">
     <a href="{{ route('dashboard') }}" class="sidebar-brand">
-    <img src="{{ asset('images/favicon-tuban.png') }}" alt="Lambang Kabupaten Tuban" class="sidebar-brand-logo">
-    <span>Sistem PPKS</span>
-</a>
+      <img src="{{ asset('images/favicon-tuban.png') }}" alt="Lambang Kabupaten Tuban" class="sidebar-brand-logo">
+      <span class="sidebar-brand-copy">
+        <span>Sistem PPKS</span>
+        <small>LAYANAN SOSIAL</small>
+      </span>
+    </a>
 
     <div class="flex-grow-1 overflow-y-auto">
       <div class="sidebar-menu-section">
-        <div class="sidebar-menu-title">Menu</div>
+        <div class="sidebar-menu-title">Navigasi utama</div>
         <ul class="sidebar-menu-list">
           <li class="sidebar-menu-item">
-            <a href="{{ auth()->user()->hasRole('kepala-rps') ? route('statistik.index') : route('dashboard') }}"
+            <a href="{{ route('dashboard') }}"
    class="sidebar-menu-link {{ request()->routeIs(['dashboard', 'statistik.index']) ? 'active' : '' }}">
     <i class="bi bi-grid-fill"></i>
-    <span>Dashboard</span>
+    <span>Dashboard Statistik</span>
 </a>
           </li>
 
-          @role('petugas-piket|peksos|admin-rps|kepala-rps')
+          @hasanyrole('admin|super-admin')
           <li class="sidebar-menu-item">
             <a href="{{ route('clients.index') }}"
                class="sidebar-menu-link {{ request()->routeIs('clients.index', 'clients.show') ? 'active' : '' }}">
@@ -144,19 +147,9 @@
               <span>Data Klien</span>
             </a>
           </li>
-          @endrole
+          @endhasanyrole
 
-          @role('kepala-rps')
-          <li class="sidebar-menu-item">
-            <a href="{{ route('users.index') }}"
-               class="sidebar-menu-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
-              <i class="bi bi-person-gear"></i>
-              <span>Manajemen Pengguna</span>
-            </a>
-          </li>
-          @endrole
-
-          @role('petugas-piket')
+          @hasanyrole('admin|super-admin')
           <li class="sidebar-menu-item">
             <a href="{{ route('clients.create') }}"
                class="sidebar-menu-link {{ request()->routeIs('clients.create') ? 'active' : '' }}">
@@ -164,9 +157,9 @@
               <span>Registrasi Klien</span>
             </a>
           </li>
-          @endrole
+          @endhasanyrole
 
-          @role('peksos')
+          @hasanyrole('admin|super-admin')
           <li class="sidebar-menu-item">
             <a href="{{ route('assessment.index') }}"
                class="sidebar-menu-link {{ request()->routeIs('assessment.*') ? 'active' : '' }}">
@@ -174,13 +167,13 @@
               <span>Assessment</span>
               @php($pendingAssessmentCount = \App\Models\Client::where('status', \App\Models\Client::STATUS_DRAFT)->count())
               @if ($pendingAssessmentCount > 0)
-                <span class="badge bg-warning text-dark ms-auto">{{ $pendingAssessmentCount }}</span>
+                <span class="sidebar-menu-badge">{{ $pendingAssessmentCount }}</span>
               @endif
             </a>
           </li>
-          @endrole
+          @endhasanyrole
 
-          @role('admin-rps')
+          @hasanyrole('admin|super-admin')
           <li class="sidebar-menu-item">
             <a href="{{ route('penanganan.dashboard') }}"
                class="sidebar-menu-link {{ request()->routeIs('penanganan.*') ? 'active' : '' }}">
@@ -195,24 +188,18 @@
               <span>Surat Saya</span>
             </a>
           </li>
+          @endhasanyrole
+
+          @role('super-admin')
+          <li class="sidebar-menu-item">
+            <a href="{{ route('users.index') }}"
+               class="sidebar-menu-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
+              <i class="bi bi-person-gear"></i>
+              <span>Manajemen Pengguna</span>
+            </a>
+          </li>
           @endrole
 
-          @role('kepala-rps')
-          <li class="sidebar-menu-item">
-            <a href="{{ route('exit-documents.index') }}"
-               class="sidebar-menu-link {{ request()->routeIs('exit-documents.*') ? 'active' : '' }}">
-              <i class="bi bi-file-earmark-check"></i>
-              <span>Persetujuan Surat</span>
-            </a>
-          </li>
-          <li class="sidebar-menu-item">
-            <a href="{{ route('clients.index') }}"
-               class="sidebar-menu-link {{ request()->routeIs('clients.*') ? 'active' : '' }}">
-              <i class="bi bi-archive"></i>
-              <span>Arsip Klien</span>
-            </a>
-          </li>
-          @endrole
         </ul>
       </div>
     </div>

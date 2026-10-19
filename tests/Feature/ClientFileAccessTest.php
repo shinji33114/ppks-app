@@ -7,15 +7,13 @@ use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
-    foreach (['petugas-piket', 'peksos', 'admin-rps', 'kepala-rps'] as $role) {
-        Role::create(['name' => $role]);
-    }
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
 });
 
 function fileTestUser(string $role): User
 {
     $user = User::factory()->create();
-    $user->assignRole($role);
+    $user->assignRole('admin');
 
     return $user;
 }
@@ -47,17 +45,17 @@ it('mengizinkan foto klien aktif diakses oleh role manapun yang login', function
     $this->actingAs($user)->get(route('clients.photo', $client))->assertOk();
 });
 
-it('menolak Petugas Piket mengakses foto klien yang sudah diarsipkan', function () {
+it('mengizinkan Admin mengakses foto klien yang sudah diarsipkan', function () {
     $client = fileTestClient(['status' => Client::STATUS_SELESAI, 'is_archived' => true]);
     $user = fileTestUser('petugas-piket');
 
-    $this->actingAs($user)->get(route('clients.photo', $client))->assertForbidden();
+    $this->actingAs($user)->get(route('clients.photo', $client))->assertOk();
 });
 
-it('mengizinkan Peksos/Admin RPS/Kepala RPS mengakses foto klien arsip', function () {
+it('mengizinkan semua akun Admin mengakses foto klien arsip', function () {
     $client = fileTestClient(['status' => Client::STATUS_SELESAI, 'is_archived' => true]);
 
-    foreach (['peksos', 'admin-rps', 'kepala-rps'] as $role) {
+    foreach (['admin', 'admin', 'admin'] as $role) {
         $user = fileTestUser($role);
         $this->actingAs($user)->get(route('clients.photo', $client))->assertOk();
     }

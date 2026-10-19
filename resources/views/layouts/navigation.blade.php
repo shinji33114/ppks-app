@@ -12,30 +12,29 @@
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
+                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs(['dashboard', 'statistik.index'])">
+                        Dashboard Statistik
                     </x-nav-link>
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-    {{ __('Dashboard') }}
-</x-nav-link>
-
-@if(auth()->user()->hasRole('petugas-piket'))
-    <x-nav-link :href="route('clients.create')" :active="request()->routeIs('clients.create')">
-        Registrasi Klien
-    </x-nav-link>
-@endif
-
-@if(auth()->user()->hasRole('peksos'))
-    <x-nav-link :href="route('clients.assessment')" :active="request()->routeIs('clients.assessment')">
-        Assessment
-    </x-nav-link>
-@endif
-
-@if(auth()->user()->hasRole('kepala-rps'))
-    <x-nav-link :href="route('reports.dashboard')" :active="request()->routeIs('reports.dashboard')">
-        Laporan & Statistik
-    </x-nav-link>
-@endif
+                    <x-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
+                        Data Klien
+                    </x-nav-link>
+                    <x-nav-link :href="route('clients.create')" :active="request()->routeIs('clients.create')">
+                        Registrasi
+                    </x-nav-link>
+                    <x-nav-link :href="route('assessment.index')" :active="request()->routeIs('assessment.*')">
+                        Assessment
+                    </x-nav-link>
+                    <x-nav-link :href="route('penanganan.dashboard')" :active="request()->routeIs('penanganan.*')">
+                        Penanganan
+                    </x-nav-link>
+                    <x-nav-link :href="route('exit-documents.mine')" :active="request()->routeIs('exit-documents.*')">
+                        Surat Saya
+                    </x-nav-link>
+                    @role('super-admin')
+                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                            Manajemen Pengguna
+                        </x-nav-link>
+                    @endrole
                 </div>
             </div>
 
@@ -88,9 +87,26 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
+            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs(['dashboard', 'statistik.index'])">
+                Dashboard Statistik
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
+                Data Klien
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('assessment.index')" :active="request()->routeIs('assessment.*')">
+                Assessment
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('penanganan.dashboard')" :active="request()->routeIs('penanganan.*')">
+                Penanganan
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('exit-documents.mine')" :active="request()->routeIs('exit-documents.*')">
+                Surat Saya
+            </x-responsive-nav-link>
+            @role('super-admin')
+                <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                    Manajemen Pengguna
+                </x-responsive-nav-link>
+            @endrole
         </div>
 
         <!-- Responsive Settings Options -->

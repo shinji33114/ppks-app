@@ -10,12 +10,28 @@
     $strip = fn (string $f) => old($f) === '-' || (old($f) === null && $assessment && $assessment->{$f} === null);
 @endphp
 
-<div class="alert alert-info small">
-    Semua kolom wajib diisi. Jika data memang tidak ada, isi dengan tanda <strong>-</strong>
-    (untuk kolom pilihan, pilih "- Tidak diketahui -").
-</div>
+<div class="workflow-page assessment-workflow">
+    <section class="workflow-hero workflow-hero-assessment mb-4">
+        <div class="workflow-hero-copy">
+            <span class="workflow-eyebrow"><i class="bi bi-clipboard2-pulse me-1"></i> Tahap 2 · Assessment psikososial</span>
+            <h2>{{ $assessment ? 'Perbarui hasil assessment' : 'Assessment klien' }}</h2>
+            <p>Catat informasi klien secara menyeluruh untuk membantu menyusun rekomendasi penanganan.</p>
+        </div>
+        <div class="assessment-client-chip">
+            <span class="workflow-avatar workflow-avatar-assessment"><i class="bi bi-person-fill"></i></span>
+            <span><small>Nama klien</small><strong>{{ $client->nama_lengkap }}</strong></span>
+        </div>
+    </section>
 
-<form method="POST" action="{{ $assessment ? route('assessment.update', $client->id) : route('assessment.store', $client->id) }}">
+    <div class="assessment-guidance">
+        <span class="assessment-guidance-icon"><i class="bi bi-info-circle-fill"></i></span>
+        <div>
+            <strong>Petunjuk pengisian</strong>
+            <p>Semua kolom wajib diisi. Jika data tidak tersedia, isi dengan tanda <strong>-</strong> atau pilih “Tidak diketahui”.</p>
+        </div>
+    </div>
+
+<form class="assessment-form" method="POST" action="{{ $assessment ? route('assessment.update', $client->id) : route('assessment.store', $client->id) }}">
     @csrf
     @if ($assessment)
         @method('PUT')
@@ -285,11 +301,17 @@
         </div>
     </div>
 
-    <button type="submit" class="btn-custom btn-custom-primary">
-        <i class="bi bi-save me-1"></i> {{ $assessment ? 'Perbarui Assessment' : 'Simpan Assessment' }}
-    </button>
-    <a href="{{ route('clients.show', $client->id) }}" class="btn-custom btn-custom-secondary ms-2">Batal</a>
+    <div class="assessment-form-actions">
+        <div class="assessment-save-hint"><i class="bi bi-shield-check me-1"></i> Pastikan data sudah benar sebelum disimpan.</div>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="submit" class="btn-custom btn-custom-primary">
+                <i class="bi bi-save me-1"></i> {{ $assessment ? 'Perbarui Assessment' : 'Simpan Assessment' }}
+            </button>
+            <a href="{{ route('clients.show', $client->id) }}" class="btn-custom btn-custom-secondary">Batal</a>
+        </div>
+    </div>
 </form>
+</div>
 @endsection
 
 @push('scripts')
