@@ -4,7 +4,7 @@
         <div>
             <h2 class="h5 fw-bold text-danger mb-1">Hapus akun</h2>
             <p class="text-muted small mb-0">
-                Tindakan ini permanen. Akun Anda dan akses masuk akan dihapus dari sistem.
+                Setelah akun dihapus, Anda tidak dapat masuk lagi ke sistem.
             </p>
         </div>
     </header>
@@ -26,7 +26,7 @@
             </div>
 
             <p class="text-muted">
-                Untuk melanjutkan, masukkan kata sandi Anda. Tindakan ini tidak dapat dibatalkan.
+                Untuk melanjutkan, masukkan kata sandi Anda. Akun yang sudah dihapus tidak dapat dipulihkan.
             </p>
 
             <div class="mb-4">

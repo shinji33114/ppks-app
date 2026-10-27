@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk - Sistem PPKS</title>
+    <title>Masuk - Layanan Sosial PPKS</title>
 
     <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicon-32.png') }}">
@@ -131,12 +131,12 @@
 
             <a href="{{ url('/') }}" class="login-brand text-decoration-none d-flex flex-column align-items-center text-center">
     <img src="{{ asset('images/logo-tuban.png') }}" alt="Lambang Kabupaten Tuban" style="height: 60px; margin-bottom: 6px;">
-    <span>Sistem PPKS</span>
+    <span>Layanan Sosial PPKS</span>
 </a>
 
 <p class="login-subtitle text-center">
     Dinas Sosial Kabupaten Tuban<br>
-    Sistem Pelayanan Penanganan Pemerlu Pelayanan Kesejahteraan Sosial
+    Digunakan petugas Dinas Sosial untuk mencatat dan membantu warga yang membutuhkan layanan sosial.
 </p>
 
             {{-- Pesan status dari Laravel (misalnya setelah reset password) --}}

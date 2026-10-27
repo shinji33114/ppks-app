@@ -1,7 +1,7 @@
 @extends('layouts.spark')
 
 @section('page-title', 'Akun Saya')
-@section('page-subtitle', 'Kelola profil dan keamanan akun Anda')
+@section('page-subtitle', 'Atur informasi dan keamanan akun Anda')
 
 @push('styles')
     <style>
@@ -114,12 +114,12 @@
             <div class="account-hero-content d-flex flex-column flex-sm-row align-items-sm-center gap-3 p-4 p-lg-5">
                 <div class="account-avatar" aria-hidden="true">{{ $initials ?: 'A' }}</div>
                 <div class="flex-grow-1">
-                    <div class="small text-white-50 mb-1">Profil akun</div>
+                    <div class="small text-white-50 mb-1">Akun Anda</div>
                     <h2 class="h3 fw-bold mb-1">{{ $user->name }}</h2>
                     <div class="text-white-50">{{ $user->email }}</div>
                 </div>
                 <span class="badge rounded-pill bg-white text-success px-3 py-2 align-self-start align-self-sm-center">
-                    <i class="bi bi-shield-check me-1"></i> {{ $user->getRoleNames()->join(', ') ?: 'Admin' }}
+                    <i class="bi bi-shield-check me-1"></i> {{ $user->getRoleNames()->map(fn ($role) => $role === 'super-admin' ? 'Pengelola utama' : 'Petugas')->join(', ') ?: 'Petugas' }}
                 </span>
             </div>
         </section>
@@ -151,8 +151,8 @@
                         <div class="d-flex align-items-center gap-3 mb-3">
                             <span class="account-section-icon"><i class="bi bi-person-vcard"></i></span>
                             <div>
-                                <h3 class="h6 fw-bold mb-1">Ringkasan akun</h3>
-                                <div class="text-muted small">Informasi akun Anda</div>
+                                <h3 class="h6 fw-bold mb-1">Informasi akun</h3>
+                                <div class="text-muted small">Ringkasan akun Anda</div>
                             </div>
                         </div>
 
@@ -175,7 +175,7 @@
                         </div>
 
                         <div class="account-meta-row py-3">
-                            <div class="text-muted small mb-1">Bergabung sejak</div>
+                            <div class="text-muted small mb-1">Akun dibuat pada</div>
                             <div class="fw-medium">{{ $user->created_at?->translatedFormat('d F Y') ?? '—' }}</div>
                         </div>
 
@@ -183,7 +183,7 @@
                             <div class="d-flex align-items-start gap-2">
                                 <i class="bi bi-lock-fill text-success mt-1"></i>
                                 <p class="small text-muted mb-0">
-                                    Jaga kerahasiaan kata sandi dan jangan bagikan akses akun kepada orang lain.
+                                    Rahasiakan kata sandi Anda. Jangan berikan kata sandi kepada orang lain.
                                 </p>
                             </div>
                         </div>

@@ -1,6 +1,6 @@
 @extends('layouts.spark')
 
-@section('page-title', $assessment ? 'Edit Assessment Psikososial' : 'Assessment Psikososial')
+@section('page-title', $assessment ? 'Ubah Hasil Penilaian' : 'Penilaian Kondisi dan Kebutuhan')
 @section('page-subtitle', 'Tahap 2 — ' . $client->nama_lengkap)
 
 @section('content')
@@ -13,13 +13,13 @@
 <div class="workflow-page assessment-workflow">
     <section class="workflow-hero workflow-hero-assessment mb-4">
         <div class="workflow-hero-copy">
-            <span class="workflow-eyebrow"><i class="bi bi-clipboard2-pulse me-1"></i> Tahap 2 · Assessment psikososial</span>
-            <h2>{{ $assessment ? 'Perbarui hasil assessment' : 'Assessment klien' }}</h2>
-            <p>Catat informasi klien secara menyeluruh untuk membantu menyusun rekomendasi penanganan.</p>
+            <span class="workflow-eyebrow"><i class="bi bi-clipboard2-pulse me-1"></i> Tahap 2 · Penilaian</span>
+            <h2>{{ $assessment ? 'Perbarui hasil penilaian' : 'Nilai kondisi dan kebutuhan' }}</h2>
+            <p>Catat kondisi penerima layanan, keluarga, dan kebutuhannya untuk menentukan bantuan yang sesuai.</p>
         </div>
         <div class="assessment-client-chip">
             <span class="workflow-avatar workflow-avatar-assessment"><i class="bi bi-person-fill"></i></span>
-            <span><small>Nama klien</small><strong>{{ $client->nama_lengkap }}</strong></span>
+            <span><small>Penerima layanan</small><strong>{{ $client->nama_lengkap }}</strong></span>
         </div>
     </section>
 
@@ -27,7 +27,7 @@
         <span class="assessment-guidance-icon"><i class="bi bi-info-circle-fill"></i></span>
         <div>
             <strong>Petunjuk pengisian</strong>
-            <p>Semua kolom wajib diisi. Jika data tidak tersedia, isi dengan tanda <strong>-</strong> atau pilih “Tidak diketahui”.</p>
+            <p>Isi semua kolom. Jika informasi tidak diketahui atau tidak tersedia, isi tanda <strong>-</strong> atau pilih “Tidak diketahui”.</p>
         </div>
     </div>
 
@@ -39,20 +39,20 @@
 
     <!-- A. Identitas Lanjutan -->
     <div class="card border-light shadow-sm p-4 mb-4">
-        <h5 class="card-title mb-4"><i class="bi bi-person-vcard me-2"></i>A. Identitas Lanjutan</h5>
+        <h5 class="card-title mb-4"><i class="bi bi-person-vcard me-2"></i>A. Data Diri</h5>
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label-custom">Nama Lengkap</label>
                 <input type="text" required name="nama_lengkap" value="{{ old('nama_lengkap', $client->nama_lengkap) }}"
                        placeholder="Nama lengkap sesuai identitas resmi" class="form-control-custom">
-                <div class="text-muted small mt-1">Perbarui jika identitas sudah ditemukan (mis. lewat DUKCAPIL/Inafis).</div>
+                <div class="text-muted small mt-1">Perbarui jika nama yang benar sudah diketahui.</div>
             </div>
             <div class="col-md-6">
-                <label class="form-label-custom">NIK</label>
+                <label class="form-label-custom">Nomor Induk Kependudukan (NIK)</label>
                 <input type="text" inputmode="numeric" name="nik" required maxlength="16" pattern="[0-9]{16}|-"
                        title="16 digit angka, atau isi tanda - jika tidak ada"
                        value="{{ $strip('nik') ? '-' : old('nik', $assessment?->nik) }}"
-                       placeholder="16 digit NIK, isi - jika tidak ada" class="form-control-custom">
+                       placeholder="Masukkan 16 angka. Isi - jika tidak diketahui." class="form-control-custom">
             </div>
             <div class="col-md-4">
                 <label class="form-label-custom">Tempat Lahir</label>
@@ -111,17 +111,17 @@
                         <option value="{{ $pendidikanTerpilih }}" selected>{{ $pendidikanTerpilih }} (data lama)</option>
                     @endif
                 </select>
-                <div class="text-muted small mt-1">Jenjang tertinggi yang telah ditamatkan.</div>
+                <div class="text-muted small mt-1">Pendidikan tertinggi yang sudah diselesaikan.</div>
             </div>
             <div class="col-12">
-                <label class="form-label-custom">Alamat (sesuai KTP)</label>
+                <label class="form-label-custom">Alamat sesuai KTP</label>
                 <textarea required name="alamat_domisili" rows="2" class="form-control-custom"
                           placeholder="Alamat lengkap sesuai KTP: jalan, RT/RW, kelurahan, kecamatan, kota">{{ old('alamat_domisili', $assessment?->alamat_domisili) }}</textarea>
             </div>
             <div class="col-12">
-                <label class="form-label-custom">Detail Alamat Pengakuan</label>
+                <label class="form-label-custom">Alamat menurut keterangan penerima layanan</label>
                 <textarea required name="detail_alamat_pengakuan" rows="2" class="form-control-custom"
-                          placeholder="Alamat sesuai pengakuan klien (RT/RW, patokan, dsb.)">{{ old('detail_alamat_pengakuan', $assessment?->detail_alamat_pengakuan) }}</textarea>
+                          placeholder="Tuliskan alamat yang disebutkan penerima layanan, termasuk RT/RW atau patokan">{{ old('detail_alamat_pengakuan', $assessment?->detail_alamat_pengakuan) }}</textarea>
             </div>
             <div class="col-md-6">
                 <label class="form-label-custom">Status Pendidikan</label>
@@ -134,7 +134,7 @@
                 </select>
             </div>
             <div class="col-md-6">
-                <label class="form-label-custom">Kategori Umur</label>
+                <label class="form-label-custom">Kelompok Usia</label>
                 <select required name="kategori_umur" class="form-control-custom @error('kategori_umur') is-invalid-custom @enderror">
                     <option value="">- Pilih -</option>
                     <option value="-" @selected($strip('kategori_umur'))>- Tidak diketahui -</option>
@@ -148,7 +148,7 @@
 
     <!-- B. Kondisi Ekonomi -->
     <div class="card border-light shadow-sm p-4 mb-4">
-        <h5 class="card-title mb-4"><i class="bi bi-cash-coin me-2"></i>B. Kondisi Ekonomi</h5>
+        <h5 class="card-title mb-4"><i class="bi bi-cash-coin me-2"></i>B. Keadaan Ekonomi</h5>
         <div class="row g-3">
             <div class="col-12">
                 <label class="form-label-custom">Bagaimana Kondisi Ekonomi 2 Bulan Terakhir?</label>
@@ -156,7 +156,7 @@
                           placeholder="Uraikan penghasilan, pengeluaran, dan kecukupan kebutuhan sehari-hari 2 bulan terakhir">{{ old('kondisi_ekonomi', $assessment?->kondisi_ekonomi) }}</textarea>
             </div>
             <div class="col-md-6">
-                <label class="form-label-custom">Pekerjaan (klien/wali)</label>
+                <label class="form-label-custom">Pekerjaan penerima layanan atau keluarga</label>
                 <input type="text" required name="pekerjaan" value="{{ old('pekerjaan', $assessment?->pekerjaan) }}"
                        placeholder="Misal: Buruh harian, Tidak bekerja, Pedagang" class="form-control-custom">
             </div>
@@ -166,7 +166,7 @@
                        placeholder="Misal: Gaji sendiri, Bantuan keluarga, Tidak ada" class="form-control-custom">
             </div>
             <div class="col-md-6">
-                <label class="form-label-custom">Kepemilikan Kartu Bantuan Sosial</label>
+                <label class="form-label-custom">Bantuan sosial yang diterima</label>
                 <input type="text" required name="kepemilikan_bansos" value="{{ old('kepemilikan_bansos', $assessment?->kepemilikan_bansos) }}"
                        placeholder="Misal: PKH, KIS, tidak ada" class="form-control-custom">
             </div>
@@ -180,16 +180,16 @@
 
     <!-- C. Kondisi Psikososial -->
     <div class="card border-light shadow-sm p-4 mb-4">
-        <h5 class="card-title mb-4"><i class="bi bi-people me-2"></i>C. Kondisi Psikososial</h5>
+        <h5 class="card-title mb-4"><i class="bi bi-people me-2"></i>C. Keadaan Keluarga dan Lingkungan</h5>
         <div class="row g-3">
             <div class="col-12">
                 <label class="form-label-custom">Latar Belakang Masalah / Riwayat Kasus</label>
                 <textarea required name="riwayat_masalah" rows="3" class="form-control-custom @error('riwayat_masalah') is-invalid-custom @enderror"
-                          placeholder="Ceritakan kronologi dan latar belakang masalah yang membawa klien ke RPS">{{ old('riwayat_masalah', $assessment?->riwayat_masalah) }}</textarea>
+                          placeholder="Ceritakan bagaimana masalah terjadi dan alasan penerima layanan membutuhkan bantuan">{{ old('riwayat_masalah', $assessment?->riwayat_masalah) }}</textarea>
                 @error('riwayat_masalah') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
             <div class="col-md-4">
-                <label class="form-label-custom">Relasi dengan Keluarga</label>
+                <label class="form-label-custom">Hubungan dengan keluarga</label>
                 <select required name="relasi_keluarga" class="form-control-custom">
                     <option value="">- Pilih -</option>
                     <option value="-" @selected($strip('relasi_keluarga'))>- Tidak diketahui -</option>
@@ -199,54 +199,54 @@
                 </select>
             </div>
             <div class="col-md-8">
-                <label class="form-label-custom">Dukungan Sosial yang Tersedia</label>
+                <label class="form-label-custom">Orang atau kelompok yang dapat membantu</label>
                 <input type="text" required name="dukungan_sosial" value="{{ old('dukungan_sosial', $assessment?->dukungan_sosial) }}"
-                       placeholder="Misal: Keluarga besar, Tetangga, Lembaga sosial setempat" class="form-control-custom">
+                       placeholder="Contoh: keluarga, tetangga, atau lembaga sosial" class="form-control-custom">
             </div>
             <div class="col-12">
-                <label class="form-label-custom">Riwayat Kekerasan / Trauma (jika ada)</label>
+                <label class="form-label-custom">Pengalaman kekerasan atau kejadian buruk (jika ada)</label>
                 <textarea required name="riwayat_trauma" rows="2" class="form-control-custom"
                           placeholder="Uraikan kekerasan/trauma yang pernah dialami, atau isi - jika tidak ada">{{ old('riwayat_trauma', $assessment?->riwayat_trauma) }}</textarea>
             </div>
             <div class="col-12">
-                <label class="form-label-custom">Permasalahan pada Lingkup Keluarga (2 Bulan Terakhir)</label>
+                <label class="form-label-custom">Masalah dalam keluarga (2 bulan terakhir)</label>
                 <textarea required name="masalah_keluarga" rows="2" class="form-control-custom"
                           placeholder="Masalah dalam rumah tangga/keluarga 2 bulan terakhir, atau isi - jika tidak ada">{{ old('masalah_keluarga', $assessment?->masalah_keluarga) }}</textarea>
             </div>
             <div class="col-12">
-                <label class="form-label-custom">Permasalahan pada Lingkup Sekolah (2 Bulan Terakhir)</label>
+                <label class="form-label-custom">Masalah di sekolah (2 bulan terakhir)</label>
                 <textarea required name="masalah_sekolah" rows="2" class="form-control-custom"
                           placeholder="Masalah terkait sekolah/pendidikan 2 bulan terakhir, atau isi - jika tidak relevan">{{ old('masalah_sekolah', $assessment?->masalah_sekolah) }}</textarea>
             </div>
             <div class="col-12">
-                <label class="form-label-custom">Permasalahan pada Lingkup Sosial Masyarakat (2 Bulan Terakhir)</label>
+                <label class="form-label-custom">Masalah dengan tetangga atau lingkungan (2 bulan terakhir)</label>
                 <textarea required name="masalah_sosial" rows="2" class="form-control-custom"
                           placeholder="Masalah dengan tetangga/lingkungan masyarakat 2 bulan terakhir, atau isi - jika tidak ada">{{ old('masalah_sosial', $assessment?->masalah_sosial) }}</textarea>
             </div>
             <div class="col-12">
-                <label class="form-label-custom">Cara Pandang Klien terhadap Masalah yang Sedang Dihadapi</label>
+                <label class="form-label-custom">Pandangan penerima layanan tentang masalahnya</label>
                 <textarea required name="cara_pandang_klien" rows="2" class="form-control-custom"
-                          placeholder="Bagaimana klien melihat/memaknai masalahnya sendiri">{{ old('cara_pandang_klien', $assessment?->cara_pandang_klien) }}</textarea>
+                          placeholder="Bagaimana penerima layanan memahami masalah yang dihadapi">{{ old('cara_pandang_klien', $assessment?->cara_pandang_klien) }}</textarea>
             </div>
             <div class="col-12">
-                <label class="form-label-custom">Rencana Kedepan</label>
+                <label class="form-label-custom">Rencana ke depan</label>
                 <textarea required name="rencana_kedepan" rows="2" class="form-control-custom"
-                          placeholder="Harapan/rencana klien setelah penanganan selesai">{{ old('rencana_kedepan', $assessment?->rencana_kedepan) }}</textarea>
+                          placeholder="Harapan atau rencana setelah pendampingan selesai">{{ old('rencana_kedepan', $assessment?->rencana_kedepan) }}</textarea>
             </div>
         </div>
     </div>
 
     <!-- D. Observasi Kondisi Mental -->
     <div class="card border-light shadow-sm p-4 mb-4">
-        <h5 class="card-title mb-4"><i class="bi bi-emoji-neutral me-2"></i>D. Observasi Kondisi Mental</h5>
+        <h5 class="card-title mb-4"><i class="bi bi-emoji-neutral me-2"></i>D. Pengamatan Perilaku dan Perasaan</h5>
         <div class="row g-3">
             <div class="col-md-6">
-                <label class="form-label-custom">Alam Perasaan (Kondisi Emosi Saat Assessment)</label>
+                <label class="form-label-custom">Suasana hati saat penilaian</label>
                 <input type="text" required name="kondisi_emosi" value="{{ old('kondisi_emosi', $assessment?->kondisi_emosi) }}"
                        placeholder="Misal: Tenang, Cemas, Mudah tersinggung" class="form-control-custom">
             </div>
             <div class="col-md-6">
-                <label class="form-label-custom">Orientasi Realita</label>
+                <label class="form-label-custom">Pemahaman terhadap keadaan sekitar</label>
                 <select required name="orientasi_realita" class="form-control-custom">
                     <option value="">- Pilih -</option>
                     <option value="-" @selected($strip('orientasi_realita'))>- Tidak diketahui -</option>
@@ -255,12 +255,12 @@
                 </select>
             </div>
             <div class="col-md-6">
-                <label class="form-label-custom">Cara Komunikasi</label>
+                <label class="form-label-custom">Cara berkomunikasi</label>
                 <input type="text" required name="cara_komunikasi" value="{{ old('cara_komunikasi', $assessment?->cara_komunikasi) }}"
-                       placeholder="Misal: Kooperatif, Pasif, Menghindari kontak mata" class="form-control-custom">
+                       placeholder="Contoh: mudah diajak berbicara, lebih banyak diam, atau menghindari kontak mata" class="form-control-custom">
             </div>
             <div class="col-md-6">
-                <label class="form-label-custom">Arus Percakapan</label>
+                <label class="form-label-custom">Cara berbicara</label>
                 <input type="text" required name="arus_percakapan" value="{{ old('arus_percakapan', $assessment?->arus_percakapan) }}"
                        placeholder="Misal: Lancar, Terhambat, Berpindah-pindah topik" class="form-control-custom">
             </div>
@@ -270,32 +270,32 @@
                        placeholder="Misal: Baik, Lupa kejadian tertentu" class="form-control-custom">
             </div>
             <div class="col-md-6">
-                <label class="form-label-custom">Arah Perilaku</label>
+                <label class="form-label-custom">Perilaku yang terlihat</label>
                 <input type="text" required name="arah_perilaku" value="{{ old('arah_perilaku', $assessment?->arah_perilaku) }}"
                        placeholder="Misal: Terarah, Gelisah, Agresif" class="form-control-custom">
             </div>
             <div class="col-12">
-                <label class="form-label-custom">Catatan Observasi Tambahan</label>
+                <label class="form-label-custom">Catatan pengamatan tambahan</label>
                 <textarea required name="catatan_observasi" rows="2" class="form-control-custom"
-                          placeholder="Hal lain yang teramati saat assessment, di luar poin-poin di atas">{{ old('catatan_observasi', $assessment?->catatan_observasi) }}</textarea>
+                          placeholder="Tuliskan hal lain yang terlihat selama penilaian">{{ old('catatan_observasi', $assessment?->catatan_observasi) }}</textarea>
             </div>
         </div>
     </div>
 
     <!-- E. Simpulan & Rekomendasi -->
     <div class="card border-light shadow-sm p-4 mb-4">
-        <h5 class="card-title mb-4"><i class="bi bi-clipboard2-check me-2"></i>E. Simpulan & Rekomendasi</h5>
+        <h5 class="card-title mb-4"><i class="bi bi-clipboard2-check me-2"></i>E. Ringkasan dan Saran</h5>
         <div class="row g-3">
             <div class="col-12">
-                <label class="form-label-custom">Simpulan Awal <span class="text-danger">*</span></label>
+                <label class="form-label-custom">Ringkasan hasil penilaian <span class="text-danger">*</span></label>
                 <textarea name="simpulan_awal" rows="3" class="form-control-custom @error('simpulan_awal') is-invalid-custom @enderror" required
-                          placeholder="Ringkasan hasil assessment: akar masalah dan kondisi klien saat ini">{{ old('simpulan_awal', $assessment?->simpulan_awal) }}</textarea>
+                          placeholder="Ringkas masalah utama, keadaan, dan kebutuhan penerima layanan">{{ old('simpulan_awal', $assessment?->simpulan_awal) }}</textarea>
                 @error('simpulan_awal') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
             <div class="col-12">
-                <label class="form-label-custom">Rekomendasi Penanganan</label>
+                <label class="form-label-custom">Saran bantuan selanjutnya</label>
                 <textarea required name="rekomendasi_penanganan" rows="3" class="form-control-custom @error('rekomendasi_penanganan') is-invalid-custom @enderror"
-                          placeholder="Saran tindak lanjut: rujukan, bimbingan, reunifikasi keluarga, dsb.">{{ old('rekomendasi_penanganan', $assessment?->rekomendasi_penanganan) }}</textarea>
+                          placeholder="Tuliskan bantuan selanjutnya, misalnya pendampingan, rujukan, atau kembali ke keluarga">{{ old('rekomendasi_penanganan', $assessment?->rekomendasi_penanganan) }}</textarea>
                 @error('rekomendasi_penanganan') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
         </div>
@@ -305,7 +305,7 @@
         <div class="assessment-save-hint"><i class="bi bi-shield-check me-1"></i> Pastikan data sudah benar sebelum disimpan.</div>
         <div class="d-flex flex-wrap gap-2">
             <button type="submit" class="btn-custom btn-custom-primary">
-                <i class="bi bi-save me-1"></i> {{ $assessment ? 'Perbarui Assessment' : 'Simpan Assessment' }}
+                <i class="bi bi-save me-1"></i> {{ $assessment ? 'Simpan Perubahan' : 'Simpan Hasil Penilaian' }}
             </button>
             <a href="{{ route('clients.show', $client->id) }}" class="btn-custom btn-custom-secondary">Batal</a>
         </div>

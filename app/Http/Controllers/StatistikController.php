@@ -55,7 +55,7 @@ class StatistikController extends Controller
             array_map(fn ($r) => [$r['label'], $r['total']], $s['statusBreakdown'])
         );
 
-        $row = $this->tulisTabel($sheet, $row, 'Tren Klien Masuk (6 Bulan Terakhir)', ['Bulan', 'Klien Masuk'],
+        $row = $this->tulisTabel($sheet, $row, 'Tren Klien Masuk (12 Bulan Terakhir)', ['Bulan', 'Klien Masuk'],
             $s['trenBulanan']->map(fn ($r) => [$r['label'], $r['total']])->all()
         );
 
@@ -171,13 +171,13 @@ class StatistikController extends Controller
         ];
 
         // Pilah kelompok usia (dihitung dari tanggal_lahir)
-        $ageBuckets = ['Anak (<18)' => 0, 'Produktif (18-59)' => 0, 'Lansia (60+)' => 0];
+        $ageBuckets = ['Anak (<18)' => 0, 'Dewasa (18-59)' => 0, 'Lansia (60+)' => 0];
         ClientAssessment::whereNotNull('tanggal_lahir')->pluck('tanggal_lahir')->each(function ($tgl) use (&$ageBuckets) {
             $age = Carbon::parse($tgl)->age;
             if ($age < 18) {
                 $ageBuckets['Anak (<18)']++;
             } elseif ($age < 60) {
-                $ageBuckets['Produktif (18-59)']++;
+                $ageBuckets['Dewasa (18-59)']++;
             } else {
                 $ageBuckets['Lansia (60+)']++;
             }
@@ -205,15 +205,15 @@ class StatistikController extends Controller
             ? round($selesaiClients->avg(fn ($c) => Carbon::parse($c->tanggal_masuk)->diffInDays(Carbon::parse($c->tanggal_keluar))), 1)
             : null;
 
-        // 6. Tren klien masuk per bulan (6 bulan terakhir)
+        // 6. Tren klien masuk per bulan (12 bulan terakhir)
         // Dihitung di PHP (bukan DATE_FORMAT) supaya jalan di MySQL maupun SQLite,
         // dan bulan tanpa klien tetap tampil dengan nilai 0.
-        $awal = Carbon::now()->subMonths(5)->startOfMonth();
+        $awal = Carbon::now()->subMonths(11)->startOfMonth();
         $perBulan = Client::where('tanggal_masuk', '>=', $awal)
             ->pluck('tanggal_masuk')
             ->countBy(fn ($tgl) => Carbon::parse($tgl)->format('Y-m'));
 
-        $trenBulanan = collect(range(0, 5))->map(function ($i) use ($awal, $perBulan) {
+        $trenBulanan = collect(range(0, 11))->map(function ($i) use ($awal, $perBulan) {
             $bulan = $awal->copy()->addMonths($i);
 
             return [

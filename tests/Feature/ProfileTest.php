@@ -11,9 +11,9 @@ test('profile page is displayed', function () {
 
     $response->assertOk()
         ->assertSee('Akun Saya')
-        ->assertSee('Informasi Profil')
-        ->assertSee('Keamanan Kata Sandi')
-        ->assertSee('Ringkasan akun')
+        ->assertSee('Data Akun')
+        ->assertSee('Ubah Kata Sandi')
+        ->assertSee('Informasi akun')
         ->assertSee('Hapus akun');
 });
 

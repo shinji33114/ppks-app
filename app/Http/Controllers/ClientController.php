@@ -146,7 +146,7 @@ class ClientController extends Controller
     public function edit(Client $client)
 {
     if (! $client->isStageOneEditable()) {
-        abort(403, 'Data Tahap 1 sudah terkunci atau melewati batas waktu edit.');
+        abort(403, 'Data pendaftaran tidak dapat diubah karena sudah dikunci atau batas waktu telah lewat.');
     }
 
     return view('clients.edit', compact('client'));
@@ -171,13 +171,13 @@ $admins = \App\Models\User::role(['admin', 'super-admin'])->get();
 \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\KlienBaruMasuk($client));
 
 return redirect()->route('dashboard')
-                  ->with('success', 'Klien berhasil diregistrasi.');
+                  ->with('success', 'Penerima layanan berhasil didaftarkan.');
     }
 
     public function update(Request $request, Client $client)
 {
     if (! $client->isStageOneEditable()) {
-        abort(403, 'Data Tahap 1 sudah terkunci atau melewati batas waktu edit.');
+        abort(403, 'Data pendaftaran tidak dapat diubah karena sudah dikunci atau batas waktu telah lewat.');
     }
 
     $validated = $this->validasiTahapSatu($request, $client);
@@ -195,7 +195,7 @@ if ($request->hasFile('data_dukung')) {
         $client->update($validated);
 
         return redirect()->route('clients.show', $client)
-            ->with('success', 'Data Tahap 1 berhasil diperbarui.');
+            ->with('success', 'Data pendaftaran berhasil diperbarui.');
     }
 
     /**

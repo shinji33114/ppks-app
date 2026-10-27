@@ -1,7 +1,7 @@
 @extends('layouts.spark')
 
-@section('page-title', 'Edit Registrasi Awal')
-@section('page-subtitle', 'Tahap 1 hanya dapat diedit maksimal 1 x 24 jam')
+@section('page-title', 'Ubah Data Pendaftaran')
+@section('page-subtitle', 'Data dapat diubah paling lama 24 jam setelah didaftarkan')
 
 @section('content')
     <div class="card border-light shadow-sm p-4">
@@ -10,7 +10,7 @@
             @method('PATCH')
 
             <div class="alert alert-info small mb-4">
-                Semua kolom wajib diisi. Jika data memang tidak ada, isi dengan tanda <strong>-</strong>.
+                Isi semua kolom. Jika informasi tidak diketahui atau tidak ada, isi dengan tanda <strong>-</strong>.
             </div>
 
             <div class="mb-3">
@@ -27,7 +27,7 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label-custom">TKP / Kronologi Singkat</label>
+                <label class="form-label-custom">Lokasi dan cerita kejadian</label>
                 <textarea name="tkp_kronologi" rows="5" class="form-control-custom"
                           required>{{ old('tkp_kronologi', $client->tkp_kronologi) }}</textarea>
             </div>
@@ -45,7 +45,7 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label-custom">Kategori PPKS</label>
+                <label class="form-label-custom">Jenis kebutuhan layanan (PPKS)</label>
                 @php($kategoriTerpilih = old('kategori_ppks', $client->kategori_ppks))
                 <select name="kategori_ppks" class="form-control-custom" required>
                     <option value="">- Pilih -</option>
@@ -57,9 +57,9 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label-custom">Problem Awal / Bentuk Pelanggaran</label>
+                <label class="form-label-custom">Masalah atau kebutuhan awal</label>
                 <textarea name="problem_awal" rows="2" class="form-control-custom" required
-                          placeholder="Uraikan singkat problem awal atau bentuk pelanggaran yang dialami klien. Isi - jika tidak ada">{{ old('problem_awal', $client->problem_awal) }}</textarea>
+                          placeholder="Tuliskan masalah atau bantuan yang dibutuhkan. Isi - jika tidak ada">{{ old('problem_awal', $client->problem_awal) }}</textarea>
             </div>
 
             <div class="mb-3">
@@ -69,15 +69,15 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label-custom">Foto Klien{{ $client->foto_klien ? ' (unggah hanya jika ingin mengganti)' : '' }}</label>
+                <label class="form-label-custom">Foto Penerima Layanan{{ $client->foto_klien ? ' (unggah hanya jika ingin mengganti)' : '' }}</label>
                 <input type="file" name="foto_klien" accept="image/*" class="form-control-custom" @required(! $client->foto_klien)>
                 @if ($client->foto_klien)
-                    <div class="text-muted small mt-1">Foto saat ini sudah tersimpan. Upload baru hanya jika ingin menggantinya.</div>
+                    <div class="text-muted small mt-1">Foto saat ini sudah tersimpan. Unggah foto baru hanya jika ingin menggantinya.</div>
                 @endif
             </div>
 
             <div class="mb-4">
-                <label class="form-label-custom">Data Dukung{{ $client->data_dukung ? ' (unggah hanya jika ingin mengganti)' : '' }}</label>
+                <label class="form-label-custom">Dokumen Pendukung{{ $client->data_dukung ? ' (unggah hanya jika ingin mengganti)' : '' }}</label>
                 <input type="file" name="data_dukung" id="data_dukung" accept=".pdf,.jpg,.jpeg,.png" class="form-control-custom">
                 @if (! $client->data_dukung)
                     <div class="form-check mt-2">
@@ -90,7 +90,7 @@
                     <div class="text-muted small mt-1">
                         Dokumen saat ini sudah tersimpan.
                         <a href="{{ route('clients.document', $client) }}" target="_blank">Lihat dokumen</a>.
-                        Upload baru hanya jika ingin menggantinya.
+                        Unggah dokumen baru hanya jika ingin menggantinya.
                     </div>
                 @endif
             </div>

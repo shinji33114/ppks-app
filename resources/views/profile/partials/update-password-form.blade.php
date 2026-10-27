@@ -2,8 +2,8 @@
     <header class="d-flex align-items-start gap-3 mb-4">
         <span class="account-section-icon"><i class="bi bi-shield-lock"></i></span>
         <div>
-            <h2 class="h5 fw-bold mb-1">Keamanan Kata Sandi</h2>
-            <p class="text-muted small mb-0">Gunakan kata sandi yang kuat dan jangan gunakan ulang kata sandi akun lain.</p>
+            <h2 class="h5 fw-bold mb-1">Ubah Kata Sandi</h2>
+            <p class="text-muted small mb-0">Buat kata sandi yang sulit ditebak dan tidak sama dengan kata sandi akun lain.</p>
         </div>
     </header>
 
@@ -33,14 +33,14 @@
             </div>
 
             <div class="col-md-6">
-                <label for="update_password_password_confirmation" class="form-label fw-semibold">Konfirmasi kata sandi</label>
+                <label for="update_password_password_confirmation" class="form-label fw-semibold">Ulangi kata sandi baru</label>
                 <input id="update_password_password_confirmation" name="password_confirmation" type="password"
                     class="form-control" autocomplete="new-password" required>
             </div>
         </div>
 
         <button type="submit" class="btn btn-success btn-account">
-            <i class="bi bi-key me-1"></i> Perbarui kata sandi
+            <i class="bi bi-key me-1"></i> Simpan kata sandi baru
         </button>
     </form>
 </section>

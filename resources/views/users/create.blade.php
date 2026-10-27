@@ -1,7 +1,7 @@
 @extends('layouts.spark')
 
 @section('page-title', 'Tambah Pengguna')
-@section('page-subtitle', 'Buat akun baru dan tentukan hak aksesnya')
+@section('page-subtitle', 'Buat akun baru dan pilih tugas penggunanya')
 
 @section('content')
     <div class="card">
@@ -19,12 +19,12 @@
                     @error('email')<div class="text-danger small">{{ $message }}</div>@enderror
                 </div>
                 <div class="mb-3">
-                    <label for="role" class="form-label-custom">Role</label>
+                    <label for="role" class="form-label-custom">Tugas pengguna</label>
                     <select id="role" name="role" class="form-control-custom" required>
-                        <option value="">- Pilih role -</option>
+                        <option value="">- Pilih tugas -</option>
                         @foreach ($roles as $role)
                             <option value="{{ $role }}" @selected(old('role') === $role)>
-                                {{ $role === 'super-admin' ? 'Super Admin' : 'Admin' }}
+                                {{ $role === 'super-admin' ? 'Pengelola utama' : 'Petugas' }}
                             </option>
                         @endforeach
                     </select>
@@ -32,17 +32,17 @@
                 </div>
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
-                        <label for="password" class="form-label-custom">Password</label>
+                        <label for="password" class="form-label-custom">Kata sandi</label>
                         <input id="password" type="password" name="password" class="form-control-custom" required>
                         @error('password')<div class="text-danger small">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-6">
-                        <label for="password_confirmation" class="form-label-custom">Konfirmasi Password</label>
+                        <label for="password_confirmation" class="form-label-custom">Ulangi kata sandi</label>
                         <input id="password_confirmation" type="password" name="password_confirmation" class="form-control-custom" required>
                     </div>
                 </div>
                 <a href="{{ route('users.index') }}" class="btn btn-light">Batal</a>
-                <button type="submit" class="btn-custom btn-custom-primary">Simpan Pengguna</button>
+                <button type="submit" class="btn-custom btn-custom-primary">Simpan Akun</button>
             </form>
         </div>
     </div>

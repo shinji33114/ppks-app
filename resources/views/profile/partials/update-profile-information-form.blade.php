@@ -2,8 +2,8 @@
     <header class="d-flex align-items-start gap-3 mb-4">
         <span class="account-section-icon"><i class="bi bi-person-gear"></i></span>
         <div>
-            <h2 class="h5 fw-bold mb-1">Informasi Profil</h2>
-            <p class="text-muted small mb-0">Perbarui nama dan alamat email yang terhubung ke akun Anda.</p>
+            <h2 class="h5 fw-bold mb-1">Data Akun</h2>
+            <p class="text-muted small mb-0">Ubah nama atau alamat email akun Anda.</p>
         </div>
     </header>
 
@@ -34,14 +34,14 @@
 
             @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
                 <div class="alert alert-warning d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mt-3 mb-0">
-                    <span class="small">Email Anda belum diverifikasi.</span>
+                    <span class="small">Alamat email Anda belum diperiksa.</span>
                     <button form="send-verification" class="btn btn-sm btn-outline-warning flex-shrink-0">
-                        Kirim ulang tautan
+                        Kirim ulang email pemeriksaan
                     </button>
                 </div>
 
                 @if (session('status') === 'verification-link-sent')
-                    <p class="small text-success mt-2 mb-0">Tautan verifikasi baru telah dikirim ke email Anda.</p>
+                    <p class="small text-success mt-2 mb-0">Email pemeriksaan baru sudah dikirim.</p>
                 @endif
             @endif
         </div>

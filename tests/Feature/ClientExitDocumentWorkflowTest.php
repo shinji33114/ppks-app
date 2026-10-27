@@ -148,6 +148,9 @@ it('allows admins to print and download the PDF immediately after publication', 
         ->get(route('exit-documents.print', $document))
         ->assertOk()
         ->assertSee('telah diproses untuk')
+        ->assertSee('Kepala Dinas')
+        ->assertSee('NIP.')
+        ->assertSee('Petugas')
         ->assertDontSee('telah disetujui');
 
     Storage::disk('local')->put($document->pdf_path, '%PDF-OLD-FORMAT');
@@ -211,7 +214,7 @@ it('C4: Admin tidak bisa submit surat untuk klien yang sudah diarsipkan', functi
     expect(ClientExitDocument::count())->toBe(0);
 });
 
-it('rejects duplicate letter numbers and responsible-party phone numbers', function () {
+it('rejects duplicate letter numbers but allows duplicate responsible-party phone numbers', function () {
     Storage::fake('local');
     $admin = exitTestUser('admin-rps');
     $firstClient = exitTestClient();
@@ -225,13 +228,16 @@ it('rejects duplicate letter numbers and responsible-party phone numbers', funct
         ->post(route('exit-documents.store', $secondClient), exitDocumentPayload([
             'no_hp_penanggung_jawab' => '081298765432',
         ]))
-        ->assertSessionHasErrors('nomor_surat');
+        ->assertSessionHasErrors('nomor_surat')
+        ->assertSessionDoesntHaveErrors('no_hp_penanggung_jawab');
 
     $this->actingAs($admin)
         ->post(route('exit-documents.store', $secondClient), exitDocumentPayload([
             'nomor_surat' => '002/RPS/IX/2026',
         ]))
-        ->assertSessionHasErrors('no_hp_penanggung_jawab');
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('exit-documents.mine'));
 
-    expect(ClientExitDocument::count())->toBe(1);
+    expect(ClientExitDocument::count())->toBe(2)
+        ->and($secondClient->refresh()->no_hp_penanggung_jawab)->toBe('081234567890');
 });

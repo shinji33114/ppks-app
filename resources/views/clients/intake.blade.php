@@ -1,17 +1,17 @@
 @extends('layouts.spark')
 
-@section('page-title', 'Registrasi Klien Baru')
-@section('page-subtitle', 'Tahap 1 — Registrasi Awal')
+@section('page-title', 'Pendaftaran Penerima Layanan')
+@section('page-subtitle', 'Tahap 1 — Pendaftaran awal')
 
 @section('content')
 <div class="row g-4">
     <div class="col-lg-8">
         <div class="card border-light shadow-sm p-4">
 
-            <h5 class="card-title mb-3">Form Registrasi Awal (Tahap 1)</h5>
+            <h5 class="card-title mb-3">Formulir Pendaftaran (Tahap 1)</h5>
 
             <div class="alert alert-info small mb-4">
-                Semua kolom wajib diisi. Jika data memang tidak ada, isi dengan tanda <strong>-</strong>.
+                Isi semua kolom. Jika informasi tidak diketahui atau tidak ada, isi dengan tanda <strong>-</strong>.
             </div>
 
             <form method="POST" action="{{ route('clients.store') }}" enctype="multipart/form-data">
@@ -30,21 +30,24 @@
 
                 <div class="mb-3">
                     <label for="sumber_aduan" class="form-label-custom">Sumber Aduan</label>
-                    <input type="text" name="sumber_aduan" id="sumber_aduan"
-                           value="{{ old('sumber_aduan') }}"
-                           class="form-control-custom @error('sumber_aduan') is-invalid-custom @enderror"
-                           placeholder="Misal: Laporan warga, Satpol PP, dsb."
-                           required>
+                    <select name="sumber_aduan" id="sumber_aduan"
+                            class="form-control-custom @error('sumber_aduan') is-invalid-custom @enderror"
+                            required>
+                        <option value="">- Pilih sumber aduan -</option>
+                        @foreach (\App\Models\Client::SUMBER_ADUAN as $sumber)
+                            <option value="{{ $sumber }}" @selected(old('sumber_aduan') === $sumber)>{{ $sumber }}</option>
+                        @endforeach
+                    </select>
                     @error('sumber_aduan')
                         <div class="text-danger small mt-1">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <div class="mb-3">
-                    <label for="tkp_kronologi" class="form-label-custom">Kronologi Singkat</label>
+                    <label for="tkp_kronologi" class="form-label-custom">Lokasi dan Cerita Singkat Kejadian</label>
                     <textarea name="tkp_kronologi" id="tkp_kronologi" rows="4"
                               class="form-control-custom @error('tkp_kronologi') is-invalid-custom @enderror"
-                              placeholder="Ceritakan singkat lokasi dan kronologi penemuan klien"
+                              placeholder="Ceritakan di mana dan bagaimana penerima layanan ditemukan"
                               required>{{ old('tkp_kronologi') }}</textarea>
                     @error('tkp_kronologi')
                         <div class="text-danger small mt-1">{{ $message }}</div>
@@ -56,7 +59,7 @@
                     <input type="text" name="nama_lengkap" id="nama_lengkap"
                            value="{{ old('nama_lengkap') }}"
                            class="form-control-custom"
-                           placeholder="Isi - jika belum diketahui (akan tercatat 'Tanpa Nama / X')"
+                           placeholder="Isi - jika nama belum diketahui"
                            required>
                 </div>
 
@@ -73,18 +76,18 @@
 </div>
 
 <div class="mb-3">
-    <label class="form-label-custom">Data Dukung</label>
+    <label class="form-label-custom">Dokumen Pendukung</label>
     <input type="file" name="data_dukung" id="data_dukung" class="form-control-custom" accept=".pdf,.jpg,.jpeg,.png">
-    <div class="text-muted small mt-1">KTP, KK, surat pengantar, atau dokumen identitas lain (PDF/gambar, maks 10MB)</div>
+    <div class="text-muted small mt-1">Contoh: KTP, KK, atau surat pengantar. Berkas boleh berupa PDF atau foto, maksimal 10 MB.</div>
     <div class="form-check mt-2">
         <input class="form-check-input" type="checkbox" name="tanpa_data_dukung" id="tanpa_data_dukung" value="1"
                @checked(old('tanpa_data_dukung'))>
-        <label class="form-check-label small" for="tanpa_data_dukung">Tidak ada data dukung (-)</label>
+        <label class="form-check-label small" for="tanpa_data_dukung">Tidak ada dokumen pendukung</label>
     </div>
 </div>
                 
                <div class="mb-3">
-    <label for="kategori_ppks" class="form-label-custom">Kategori PPKS</label>
+    <label for="kategori_ppks" class="form-label-custom">Jenis kebutuhan layanan (PPKS)</label>
     <select name="kategori_ppks" id="kategori_ppks" class="form-control-custom" required>
         <option value="">- Pilih -</option>
         <option value="-" @selected(old('kategori_ppks') === '-')>- Tidak diketahui -</option>
@@ -95,13 +98,13 @@
 </div>
 
 <div class="mb-3">
-    <label for="problem_awal" class="form-label-custom">Problem Awal / Bentuk Pelanggaran</label>
+    <label for="problem_awal" class="form-label-custom">Masalah atau kebutuhan awal</label>
     <textarea name="problem_awal" id="problem_awal" rows="2" class="form-control-custom" required
-              placeholder="Uraikan singkat problem awal atau bentuk pelanggaran yang dialami klien. Isi - jika tidak ada">{{ old('problem_awal') }}</textarea>
+              placeholder="Tuliskan masalah atau bantuan yang dibutuhkan. Isi - jika tidak ada">{{ old('problem_awal') }}</textarea>
 </div>
 
                 <div class="mb-4">
-                    <label for="foto_klien" class="form-label-custom">Foto Klien <span class="text-danger">*</span></label>
+                    <label for="foto_klien" class="form-label-custom">Foto Penerima Layanan <span class="text-danger">*</span></label>
                     <input type="file" name="foto_klien" id="foto_klien" accept="image/*"
                            class="form-control-custom @error('foto_klien') is-invalid-custom @enderror" required>
                     @error('foto_klien')
@@ -119,13 +122,13 @@
 
     <div class="col-lg-4">
         <div class="card border-light shadow-sm p-4">
-            <h6 class="card-title mb-3"><i class="bi bi-info-circle me-1"></i> Panduan Tahap 1</h6>
+            <h6 class="card-title mb-3"><i class="bi bi-info-circle me-1"></i> Petunjuk Pengisian</h6>
             <ul class="ps-3 mb-0" style="font-size: 0.875rem; line-height: 1.8;">
-                <li>Semua kolom wajib diisi. Jika datanya tidak ada, isi dengan tanda <strong>-</strong>.</li>
-                <li>Nama diisi <strong>-</strong> jika identitas klien belum diketahui (akan tercatat "Tanpa Nama / X").</li>
-                <li>Foto klien wajib diunggah. Data dukung wajib diunggah, atau centang "Tidak ada data dukung".</li>
-                <li>Setelah disimpan, Admin akan mendapat notifikasi untuk melanjutkan ke tahap Assessment.</li>
-                <li>Data ini akan terkunci begitu Admin mulai mengisi Tahap 2.</li>
+                <li>Isi semua kolom. Jika informasi tidak diketahui atau tidak ada, isi dengan tanda <strong>-</strong>.</li>
+                <li>Jika nama belum diketahui, isi dengan tanda <strong>-</strong>.</li>
+                <li>Foto wajib diunggah. Unggah dokumen pendukung atau centang "Tidak ada dokumen pendukung".</li>
+                <li>Setelah disimpan, petugas akan melanjutkan ke tahap penilaian.</li>
+                <li>Data pendaftaran tidak dapat diubah setelah petugas mulai mengisi tahap penilaian.</li>
             </ul>
         </div>
     </div>

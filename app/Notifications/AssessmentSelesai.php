@@ -21,7 +21,7 @@ class AssessmentSelesai extends Notification
         return [
             'client_id' => $this->client->id,
             'nama_lengkap' => $this->client->nama_lengkap,
-            'message' => "Assessment klien \"{$this->client->nama_lengkap}\" telah selesai dan siap ditangani.",
+            'message' => "Penilaian untuk \"{$this->client->nama_lengkap}\" selesai. Penerima layanan siap didampingi.",
             'url' => route('clients.show', $this->client->id),
         ];
     }

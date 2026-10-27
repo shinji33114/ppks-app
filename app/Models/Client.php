@@ -22,6 +22,19 @@ class Client extends Model
         'Korban Kekerasan', 'Gelandangan / Pengemis', 'ODGJ Terlantar', 'Lainnya',
     ];
 
+    public const SUMBER_ADUAN = [
+        'Laporan warga',
+        'Satpol PP',
+        'Kepolisian',
+        'Dinas Sosial',
+        'Ormas',
+        'Kelompok atau Lembaga Sosial',
+        'Puskesmas/Rumah Sakit',
+        'Keluarga/kerabat',
+        'Hasil patroli/penjangkauan',
+        'Lainnya',
+    ];
+
     protected $fillable = [
         'status',
         'tanggal_masuk',
@@ -58,11 +71,11 @@ class Client extends Model
 
     public function getStatusLabelAttribute(): string
 {
-    // C3: nama status disamakan persis dengan diagram alur di dokumen panduan.
+    // Status ditampilkan dengan istilah sederhana untuk pengguna.
     return [
-        self::STATUS_DRAFT => 'Draft / Diterima',
-        self::STATUS_ASSESSMENT => 'Proses Assessment',
-        self::STATUS_PENANGANAN => 'Dalam Penanganan',
+        self::STATUS_DRAFT => 'Baru diterima',
+        self::STATUS_ASSESSMENT => 'Menunggu penilaian',
+        self::STATUS_PENANGANAN => 'Sedang didampingi',
         self::STATUS_SELESAI => 'Selesai',
         self::STATUS_DIRUJUK => 'Dirujuk',
     ][$this->status] ?? $this->status;

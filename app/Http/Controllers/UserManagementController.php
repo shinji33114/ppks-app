@@ -39,7 +39,7 @@ class UserManagementController extends Controller
         ]);
         $user->assignRole($validated['role']);
 
-        return redirect()->route('users.index')->with('success', 'Pengguna berhasil dibuat.');
+        return redirect()->route('users.index')->with('success', 'Akun pengguna berhasil dibuat.');
     }
 
     public function toggleActive(User $user): RedirectResponse
@@ -50,11 +50,11 @@ class UserManagementController extends Controller
 
         if ($user->hasRole('super-admin') && $user->is_active
             && User::role('super-admin')->where('is_active', true)->count() <= 1) {
-            return back()->with('error', 'Minimal harus ada satu akun Super Admin yang aktif.');
+            return back()->with('error', 'Harus ada setidaknya satu akun pengelola utama yang aktif.');
         }
 
         $user->update(['is_active' => ! $user->is_active]);
 
-        return back()->with('success', 'Status pengguna berhasil diperbarui.');
+        return back()->with('success', 'Status akun berhasil diperbarui.');
     }
 }

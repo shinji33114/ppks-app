@@ -22,6 +22,20 @@ it('requires a client photo during stage one registration', function () {
     $response->assertSessionHasErrors('foto_klien');
 });
 
+it('shows a predefined source of complaint menu during registration', function () {
+    $user = User::factory()->create();
+    $user->assignRole('admin');
+
+    $this->actingAs($user)
+        ->get(route('clients.create'))
+        ->assertOk()
+        ->assertSee('<select name="sumber_aduan"', false)
+        ->assertSee('Laporan warga')
+        ->assertSee('Satpol PP')
+        ->assertSee('Ormas')
+        ->assertSee('Kelompok atau Lembaga Sosial');
+});
+
 it('stores the expanded stage one client data and uploads', function () {
     Storage::fake('local'); // disk privat, lihat catatan opsi A soal foto/dokumen klien
 

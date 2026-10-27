@@ -1,19 +1,19 @@
 @extends('layouts.spark')
 
-@section('page-title', 'Assessment')
-@section('page-subtitle', 'Daftar klien yang menunggu assessment')
+@section('page-title', 'Daftar Penilaian')
+@section('page-subtitle', 'Penerima layanan yang menunggu penilaian')
 
 @section('content')
 <div class="workflow-page">
     <section class="workflow-hero workflow-hero-assessment mb-4">
         <div class="workflow-hero-copy">
-            <span class="workflow-eyebrow"><i class="bi bi-clipboard2-pulse me-1"></i> Tahap 2 · Assessment</span>
-            <h2>Mulai dari memahami kebutuhan</h2>
-            <p>Lengkapi assessment psikososial untuk menentukan dukungan yang paling sesuai bagi setiap klien.</p>
+            <span class="workflow-eyebrow"><i class="bi bi-clipboard2-pulse me-1"></i> Tahap 2 · Penilaian</span>
+            <h2>Pahami kebutuhan penerima layanan</h2>
+            <p>Catat keadaan dan kebutuhan untuk menentukan bantuan yang paling sesuai.</p>
         </div>
         <div class="workflow-hero-stat">
             <span class="workflow-stat-icon"><i class="bi bi-hourglass-split"></i></span>
-            <div><strong>{{ number_format($clients->total()) }}</strong><span>menunggu assessment</span></div>
+            <div><strong>{{ number_format($clients->total()) }}</strong><span>menunggu penilaian</span></div>
         </div>
     </section>
 
@@ -22,11 +22,11 @@
             <div class="workflow-panel-heading">
                 <span class="workflow-panel-icon"><i class="bi bi-inboxes"></i></span>
                 <div>
-                    <h3>Antrean assessment</h3>
-                    <p>Klien yang siap diproses pada Tahap 2</p>
+                    <h3>Daftar yang menunggu penilaian</h3>
+                    <p>Penerima layanan yang siap dinilai</p>
                 </div>
             </div>
-            <span class="workflow-count">{{ number_format($clients->total()) }} klien</span>
+            <span class="workflow-count">{{ number_format($clients->total()) }} orang</span>
         </div>
 
         <div class="table-responsive workflow-table-wrap">
@@ -34,10 +34,10 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Nama Klien</th>
+                        <th>Nama Penerima Layanan</th>
                         <th>Tanggal Masuk</th>
                         <th>Sumber Aduan</th>
-                        <th class="text-end">Aksi</th>
+                        <th class="text-end">Pilihan</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -54,7 +54,7 @@
                             <td><span class="workflow-source">{{ $client->sumber_aduan }}</span></td>
                             <td class="text-end">
                                 <a href="{{ route('assessment.create', $client->id) }}" class="btn-custom btn-custom-primary workflow-action">
-                                    <i class="bi bi-play-fill me-1"></i> Mulai Assessment
+                                    <i class="bi bi-play-fill me-1"></i> Mulai Penilaian
                                 </a>
                             </td>
                         </tr>
@@ -62,8 +62,8 @@
                         <tr>
                             <td colspan="5" class="workflow-empty">
                                 <span class="workflow-empty-icon"><i class="bi bi-clipboard2-check"></i></span>
-                                <strong>Antrean assessment kosong</strong>
-                                <span>Klien yang siap di-assessment akan muncul di sini.</span>
+                                <strong>Belum ada yang menunggu penilaian</strong>
+                                <span>Penerima layanan yang siap dinilai akan muncul di sini.</span>
                             </td>
                         </tr>
                     @endforelse

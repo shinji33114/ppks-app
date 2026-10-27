@@ -5,7 +5,10 @@ use App\Models\User;
 test('login screen can be rendered', function () {
     $response = $this->get('/login');
 
-    $response->assertStatus(200);
+    $response->assertStatus(200)
+        ->assertSee('Layanan Sosial PPKS')
+        ->assertSee('Masuk ke Sistem')
+        ->assertSee('Digunakan petugas Dinas Sosial');
 });
 
 test('users can authenticate using the login screen', function () {
@@ -26,6 +29,8 @@ test('users can not authenticate with invalid password', function () {
     $this->post('/login', [
         'email' => $user->email,
         'password' => 'wrong-password',
+    ])->assertSessionHasErrors([
+        'email' => 'Email atau kata sandi salah. Periksa kembali lalu coba lagi.',
     ]);
 
     $this->assertGuest();

@@ -27,7 +27,7 @@ class PenangananController extends Controller
     {
         if ($client->is_archived || !in_array($client->status, ['assessment', 'penanganan'])) {
             return redirect()->route('clients.show', $client->id)
-                              ->with('error', 'Client ini belum siap atau sudah selesai ditangani.');
+                              ->with('error', 'Penerima layanan ini belum siap didampingi atau layanannya sudah selesai.');
         }
 
         $followups = $client->followups;
@@ -43,7 +43,7 @@ class PenangananController extends Controller
         // A2: catatan tindakan hanya boleh ditambah saat klien sedang dalam penanganan dan belum diarsipkan.
         if ($client->is_archived || ! in_array($client->status, [Client::STATUS_ASSESSMENT, Client::STATUS_PENANGANAN], true)) {
             return redirect()->route('clients.show', $client->id)
-                ->with('error', 'Catatan tindakan tidak dapat ditambahkan: klien belum siap ditangani atau sudah diarsipkan.');
+                ->with('error', 'Catatan kegiatan tidak dapat ditambahkan karena pendampingan belum dimulai atau data sudah ditutup.');
         }
 
         $validated = $request->validate([
@@ -62,7 +62,7 @@ class PenangananController extends Controller
         }
 
         return redirect()->route('penanganan.index', $client->id)
-                          ->with('success', 'Catatan tindakan berhasil ditambahkan.');
+                          ->with('success', 'Catatan kegiatan berhasil disimpan.');
     }
 
 }

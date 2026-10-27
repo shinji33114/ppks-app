@@ -47,21 +47,21 @@ it('renders the refreshed assessment and handling pages', function () {
     $this->actingAs($admin)
         ->get(route('assessment.index'))
         ->assertOk()
-        ->assertSee('Antrean assessment')
+        ->assertSee('Daftar yang menunggu penilaian')
         ->assertSee($waitingClient->nama_lengkap);
 
     $this->actingAs($admin)
         ->get(route('penanganan.dashboard'))
         ->assertOk()
-        ->assertSee('Klien siap ditangani')
+        ->assertSee('Siap didampingi')
         ->assertSee($handlingClient->nama_lengkap);
 
     $this->actingAs($admin)
         ->get(route('penanganan.index', $handlingClient))
         ->assertOk()
-        ->assertSee('Catat tindakan')
-        ->assertSee('Riwayat tindakan')
-        ->assertSee('Surat keluar / rujukan');
+        ->assertSee('Tambah catatan kegiatan')
+        ->assertSee('Riwayat kegiatan')
+        ->assertSee('Surat keluar atau rujukan');
 });
 
 // ---------------------------------------------------------------- A1

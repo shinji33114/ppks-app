@@ -44,10 +44,31 @@ it('shows a clear Excel export action on the statistics dashboard', function () 
     $this->actingAs($admin)
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('Ekspor laporan statistik')
-        ->assertSee('Unduh data Excel')
+        ->assertSee('Unduh laporan')
+        ->assertSee('Unduh laporan Excel')
         ->assertSee(route('statistik.export'), false)
-        ->assertSee('format Excel (.xlsx)');
+        ->assertSee('berkas Excel');
+});
+
+it('shows source of complaint statistics as a bar chart', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    Client::create([
+        'tanggal_masuk' => now()->toDateString(),
+        'sumber_aduan' => 'Ormas',
+        'tkp_kronologi' => 'Ditemukan di area publik.',
+        'nama_lengkap' => 'Klien Uji',
+        'foto_klien' => 'client-photos/test.jpg',
+        'status' => Client::STATUS_DRAFT,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertSee('chart-sumber-aduan')
+        ->assertSee('horizontal: true')
+        ->assertSee('Ormas');
 });
 
 it('redirects guests to the login page', function () {

@@ -118,7 +118,7 @@ it('shows the official revision action for a closed client and opens its form', 
     $this->actingAs($head)
         ->get(route('clients.show', $client))
         ->assertOk()
-        ->assertSee('Revisi Data Arsip');
+        ->assertSee('Perbaiki Data');
 
     $this->actingAs($head)
         ->get(route('clients.revisi.edit', $client))
@@ -187,7 +187,7 @@ it('shows the admin role and the Tuban footer on the dashboard', function () {
     $this->actingAs(arsipRevUser('admin'))
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('Dashboard Statistik')
+        ->assertSee('Ringkasan Layanan')
         ->assertSee('Total Penerima Manfaat')
         ->assertSee('Dinas Sosial Kabupaten Tuban');
 });

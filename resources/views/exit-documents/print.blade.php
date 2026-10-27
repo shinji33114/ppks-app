@@ -25,9 +25,10 @@
         .identity { border-collapse: collapse; margin: 16px 0; width: 100%; }
         .identity td { border: 1px solid #555; padding: 7px 9px; vertical-align: top; }
         .identity td:first-child { width: 34%; }
-        .signature { float: right; margin-top: 42px; text-align: center; width: 230px; }
+        .signatures { margin-top: 42px; table-layout: fixed; width: 100%; }
+        .signatures td { text-align: center; vertical-align: top; width: 50%; }
         .signature-space { height: 76px; }
-        .signature strong { text-decoration: underline; }
+        .signature-name { font-weight: bold; text-decoration: underline; }
         @media print {
             .toolbar { display: none; }
             .letter { max-width: none; }
@@ -37,8 +38,8 @@
 
 <body>
     <div class="toolbar">
-        <button type="button" onclick="window.print()">Cetak Surat</button>
-        <a href="{{ route('exit-documents.show', $document) }}">Kembali</a>
+        <button type="button" onclick="window.print()">Cetak surat</button>
+        <a href="{{ route('exit-documents.show', $document) }}">Kembali ke detail surat</a>
     </div>
 
     <main class="letter">
@@ -55,14 +56,14 @@
 
         <table class="meta">
             <tr><td>Nomor</td><td>: {{ $document->nomor_surat ?: '-' }}</td></tr>
-            <tr><td>Tanggal</td><td>: {{ $document->tanggal_surat->format('d-m-Y') }}</td></tr>
+            <tr><td>Tanggal Surat</td><td>: {{ $document->tanggal_surat->format('d-m-Y') }}</td></tr>
             <tr><td>Tujuan</td><td>: {{ $document->tujuan }}</td></tr>
         </table>
 
         <div class="content">
             <p>Dengan hormat,</p>
             <p>
-                Dengan ini menerangkan bahwa klien berikut telah mendapatkan pelayanan di
+                Dengan ini menerangkan bahwa penerima layanan berikut telah mendapatkan pelayanan di
                 Rumah Perlindungan Sosial PPKS dan telah diproses untuk
                 {{ $document->type === 'rujukan' ? 'dirujuk ke instansi tujuan' : 'keluar atau kembali kepada keluarga' }}.
             </p>
@@ -70,10 +71,10 @@
             <table class="identity">
                 <tr><td>Nama Lengkap</td><td>{{ $document->client->nama_lengkap }}</td></tr>
                 <tr><td>Jenis Kelamin</td><td>{{ $document->client->assessment?->jenis_kelamin ?: ($document->client->jenis_kelamin ?: '-') }}</td></tr>
-                <tr><td>NIK</td><td>{{ $document->client->assessment?->nik ?: '-' }}</td></tr>
+                <tr><td>Nomor Induk Kependudukan (NIK)</td><td>{{ $document->client->assessment?->nik ?: '-' }}</td></tr>
                 <tr><td>Alamat</td><td>{{ $document->client->assessment?->alamat_domisili ?: ($document->client->alamat ?: '-') }}</td></tr>
                 <tr><td>Tanggal Masuk</td><td>{{ $document->client->tanggal_masuk->format('d-m-Y') }}</td></tr>
-                <tr><td>Tanggal Keluar</td><td>{{ $document->tanggal_keluar->format('d-m-Y') }}</td></tr>
+                <tr><td>Tanggal Layanan Berakhir</td><td>{{ $document->tanggal_keluar->format('d-m-Y') }}</td></tr>
                 <tr><td>Penanggung Jawab</td><td>{{ $document->no_hp_penanggung_jawab }}</td></tr>
             </table>
 
@@ -86,12 +87,23 @@
             </p>
         </div>
 
-        <div class="signature">
-            <div>{{ $document->tanggal_surat->translatedFormat('d F Y') }}</div>
-            <div>Admin</div>
-            <div class="signature-space"></div>
-            <strong>{{ $document->creator?->name ?: 'Admin' }}</strong>
-        </div>
+        <table class="signatures">
+            <tr>
+                <td>
+                    <div>Mengetahui,</div>
+                    <div>Kepala Dinas</div>
+                    <div class="signature-space"></div>
+                    <div class="signature-name">........................................</div>
+                    <div>NIP. ................................</div>
+                </td>
+                <td>
+                    <div>{{ $document->tanggal_surat->translatedFormat('d F Y') }}</div>
+                    <div>Petugas</div>
+                    <div class="signature-space"></div>
+                    <div class="signature-name">{{ $document->creator?->name ?: 'Admin' }}</div>
+                </td>
+            </tr>
+        </table>
     </main>
 </body>
 

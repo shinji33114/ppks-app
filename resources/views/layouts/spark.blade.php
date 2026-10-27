@@ -5,7 +5,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>@yield('page-title', 'Dashboard') - Sistem PPKS</title>
+  <title>@yield('page-title', 'Beranda') - Layanan Sosial PPKS</title>
 
   <!-- Favicon -->
   <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
@@ -122,39 +122,29 @@
     <a href="{{ route('dashboard') }}" class="sidebar-brand">
       <img src="{{ asset('images/favicon-tuban.png') }}" alt="Lambang Kabupaten Tuban" class="sidebar-brand-logo">
       <span class="sidebar-brand-copy">
-        <span>Sistem PPKS</span>
+        <span>Layanan Sosial PPKS</span>
         <small>LAYANAN SOSIAL</small>
       </span>
     </a>
 
     <div class="flex-grow-1 overflow-y-auto">
       <div class="sidebar-menu-section">
-        <div class="sidebar-menu-title">Navigasi utama</div>
+        <div class="sidebar-menu-title">Menu utama</div>
         <ul class="sidebar-menu-list">
           <li class="sidebar-menu-item">
             <a href="{{ route('dashboard') }}"
    class="sidebar-menu-link {{ request()->routeIs(['dashboard', 'statistik.index']) ? 'active' : '' }}">
     <i class="bi bi-grid-fill"></i>
-    <span>Dashboard Statistik</span>
+    <span>Dashboard</span>
 </a>
           </li>
-
-          @hasanyrole('admin|super-admin')
-          <li class="sidebar-menu-item">
-            <a href="{{ route('clients.index') }}"
-               class="sidebar-menu-link {{ request()->routeIs('clients.index', 'clients.show') ? 'active' : '' }}">
-              <i class="bi bi-people"></i>
-              <span>Data Klien</span>
-            </a>
-          </li>
-          @endhasanyrole
 
           @hasanyrole('admin|super-admin')
           <li class="sidebar-menu-item">
             <a href="{{ route('clients.create') }}"
                class="sidebar-menu-link {{ request()->routeIs('clients.create') ? 'active' : '' }}">
               <i class="bi bi-person-plus"></i>
-              <span>Registrasi Klien</span>
+              <span>Daftarkan Penerima</span>
             </a>
           </li>
           @endhasanyrole
@@ -164,7 +154,7 @@
             <a href="{{ route('assessment.index') }}"
                class="sidebar-menu-link {{ request()->routeIs('assessment.*') ? 'active' : '' }}">
               <i class="bi bi-clipboard2-pulse"></i>
-              <span>Assessment</span>
+              <span>Penilaian Informasi</span>
               @php($pendingAssessmentCount = \App\Models\Client::where('status', \App\Models\Client::STATUS_DRAFT)->count())
               @if ($pendingAssessmentCount > 0)
                 <span class="sidebar-menu-badge">{{ $pendingAssessmentCount }}</span>
@@ -178,14 +168,14 @@
             <a href="{{ route('penanganan.dashboard') }}"
                class="sidebar-menu-link {{ request()->routeIs('penanganan.*') ? 'active' : '' }}">
               <i class="bi bi-journal-text"></i>
-              <span>Penanganan</span>
+              <span>Pendampingan/Pengajuan</span>
             </a>
           </li>
           <li class="sidebar-menu-item">
             <a href="{{ route('exit-documents.mine') }}"
                class="sidebar-menu-link {{ request()->routeIs('exit-documents.mine', 'exit-documents.edit', 'exit-documents.resubmit') ? 'active' : '' }}">
               <i class="bi bi-file-earmark-check"></i>
-              <span>Surat Saya</span>
+              <span>Surat Keluar dan Rujukan</span>
             </a>
           </li>
           @endhasanyrole
@@ -195,10 +185,20 @@
             <a href="{{ route('users.index') }}"
                class="sidebar-menu-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
               <i class="bi bi-person-gear"></i>
-              <span>Manajemen Pengguna</span>
+              <span>Kelola Akun Pengguna</span>
             </a>
           </li>
           @endrole
+
+           @hasanyrole('admin|super-admin')
+          <li class="sidebar-menu-item">
+            <a href="{{ route('clients.index') }}"
+               class="sidebar-menu-link {{ request()->routeIs('clients.index', 'clients.show') ? 'active' : '' }}">
+              <i class="bi bi-people"></i>
+              <span>Data Penerima Layanan</span>
+            </a>
+          </li>
+          @endhasanyrole
 
         </ul>
       </div>
@@ -225,27 +225,18 @@
     <header class="navbar-custom">
       <div class="navbar-left">
         <button class="btn-desktop-toggle d-none d-xl-flex align-items-center justify-content-center me-3"
-          id="desktop-sidebar-toggle" aria-label="Minimize Sidebar">
+          id="desktop-sidebar-toggle" aria-label="Tutup menu samping">
           <i class="bi bi-chevron-bar-left"></i>
         </button>
-        <button class="sidebar-toggle-btn me-2" id="sidebar-toggle" aria-label="Toggle Navigation">
+        <button class="sidebar-toggle-btn me-2" id="sidebar-toggle" aria-label="Buka atau tutup menu">
           <i class="bi bi-list"></i>
         </button>
-      </div>
-
-      <div class="navbar-search-wrapper">
-        <form action="{{ route('clients.index') }}" method="GET" class="d-flex w-100">
-          <input type="text" name="search" class="navbar-search-input" placeholder="Cari nama klien..."
-                 value="{{ request('search') }}" id="main-search">
-          <button type="submit" class="navbar-search-btn" aria-label="Cari">
-            <i class="bi bi-search"></i>
-          </button>
-        </form>
       </div>
 
       <div class="navbar-actions">
         <div class="dropdown">
     <button class="navbar-action-btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
+      aria-label="Lihat pemberitahuan"
       aria-expanded="false" id="btn-notifications" data-bs-auto-close="outside">
       <i class="bi bi-bell"></i>
       @if (auth()->user()->unreadNotifications->count() > 0)
@@ -255,11 +246,11 @@
     <div class="dropdown-menu dropdown-menu-end dropdown-menu-notification p-0"
       aria-labelledby="btn-notifications">
       <div class="notification-header">
-        <h6 class="notification-title">Notifikasi</h6>
+        <h6 class="notification-title">Pemberitahuan</h6>
         @if (auth()->user()->unreadNotifications->count() > 0)
           <form method="POST" action="{{ route('notifications.read-all') }}">
             @csrf
-            <button class="btn-clear-all" type="submit">Tandai semua dibaca</button>
+            <button class="btn-clear-all" type="submit">Tandai semua sudah dibaca</button>
           </form>
         @endif
       </div>
@@ -309,13 +300,7 @@
     </header>
     <!-- END: Top Navbar Component -->
 
-    <!-- Page Header Banner -->
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">@yield('page-title', 'Dashboard')</h1>
-        <p class="page-subtitle">@yield('page-subtitle', '')</p>
-      </div>
-    </div>
+   
       
 
     {{-- Notifikasi sukses/gagal, tampil di semua halaman yang pakai layout ini --}}
@@ -346,7 +331,7 @@
       <div class="footer-left">
         <span class="footer-logo">
           <img src="{{ asset('images/favicon-tuban.png') }}" alt="" style="height: 18px; width: auto; margin-right: 6px; vertical-align: -3px;">
-          Sistem PPKS — Dinas Sosial Kabupaten Tuban
+          Layanan Sosial PPKS — Dinas Sosial Kabupaten Tuban
         </span>
         <span class="text-muted small ms-2">&copy; {{ date('Y') }} Dinas Kominfo Kabupaten Tuban</span>
       </div>

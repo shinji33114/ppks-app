@@ -65,9 +65,9 @@ it('shows client totals for each progress stage and filters the list when a stag
     $this->actingAs($admin)
         ->get(route('clients.index', ['stage' => 'assessment']))
         ->assertOk()
-        ->assertSee('3 klien')
-        ->assertSee('2 klien')
-        ->assertSee('1 klien')
+        ->assertSee('3 orang')
+        ->assertSee('2 orang')
+        ->assertSee('1 orang')
         ->assertSee(route('clients.index', ['stage' => 'final']))
         ->assertSee('Klien Assessment 1')
         ->assertSee('Klien Assessment 2')
@@ -76,6 +76,47 @@ it('shows client totals for each progress stage and filters the list when a stag
         ->assertDontSee('Klien Penanganan')
         ->assertDontSee('Klien Selesai')
         ->assertDontSee('Klien Dirujuk');
+});
+
+it('shows client search only on the client list above the table', function () {
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    Client::create([
+        'tanggal_masuk' => '2026-09-20',
+        'sumber_aduan' => 'Laporan warga',
+        'tkp_kronologi' => 'Ditemukan di area publik.',
+        'nama_lengkap' => 'Nama Klien Dicari',
+        'status' => Client::STATUS_DRAFT,
+    ]);
+    Client::create([
+        'tanggal_masuk' => '2026-09-20',
+        'sumber_aduan' => 'Laporan warga',
+        'tkp_kronologi' => 'Ditemukan di area publik.',
+        'nama_lengkap' => 'Klien Lain',
+        'status' => Client::STATUS_DRAFT,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertDontSee('Cari nama penerima layanan');
+
+    $this->actingAs($admin)
+        ->get(route('clients.index'))
+        ->assertOk()
+        ->assertSee('Cari nama penerima layanan')
+        ->assertSee('filter-search', false)
+        ->assertSee('filter-tanggal-masuk', false)
+        ->assertSeeInOrder(['id="filter-search"', '<table class="table-custom">'], false);
+
+    $this->actingAs($admin)
+        ->get(route('clients.index', ['search' => 'Nama Klien Dicari']))
+        ->assertOk()
+        ->assertSee('value="Nama Klien Dicari"', false)
+        ->assertSee('Nama Klien Dicari')
+        ->assertDontSee('Klien Lain');
 });
 
 it('offers a direct assessment action below the photo on eligible client details only', function () {
@@ -104,19 +145,19 @@ it('offers a direct assessment action below the photo on eligible client details
     $this->actingAs($admin)
         ->get(route('clients.index'))
         ->assertOk()
-        ->assertDontSee('Mulai Assessment')
+        ->assertDontSee('Mulai Penilaian')
         ->assertDontSee(route('assessment.create', $draftClient), false);
 
     $this->actingAs($admin)
         ->get(route('clients.show', $draftClient))
         ->assertOk()
-        ->assertSeeInOrder(['alt="Foto Klien"', 'Mulai Assessment', 'Klien Siap Assessment'])
+        ->assertSeeInOrder(['alt="Foto Penerima Layanan"', 'Mulai Penilaian', 'Klien Siap Assessment'])
         ->assertSee(route('assessment.create', $draftClient), false);
 
     $this->actingAs($admin)
         ->get(route('clients.show', $archivedClient))
         ->assertOk()
-        ->assertDontSee('Mulai Assessment')
+        ->assertDontSee('Mulai Penilaian')
         ->assertDontSee(route('assessment.create', $archivedClient), false);
 });
 

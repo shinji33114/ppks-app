@@ -29,20 +29,21 @@ it('allows admin and super admin to use workflow areas but restricts account man
     $this->actingAs($admin)->get(route('users.create'))->assertForbidden();
     $this->actingAs($superAdmin)->get(route('users.index'))->assertOk();
     $this->actingAs($superAdmin)->get(route('users.create'))->assertOk()
-        ->assertSee('Super Admin');
+        ->assertSee('Pengelola utama');
 
     $this->actingAs($admin)
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('Dashboard Statistik')
+        ->assertSee('Ringkasan Layanan')
+        ->assertDontSee('<h1 class="page-title">Ringkasan Layanan</h1>', false)
         ->assertSee('Total Penerima Manfaat')
-        ->assertDontSee('Manajemen Pengguna')
+        ->assertDontSee('Kelola Akun Pengguna')
         ->assertDontSee('Pengguna</a>');
 
     $this->actingAs($superAdmin)
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('Manajemen Pengguna');
+        ->assertSee('Kelola Akun Pengguna');
 
     $this->actingAs($admin)
         ->get(route('statistik.index'))

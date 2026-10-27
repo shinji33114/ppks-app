@@ -168,7 +168,7 @@ class AssessmentController extends Controller
     {
         if (! $this->canBeAssessed($client)) {
             return redirect()->route('clients.show', $client->id)
-                ->with('error', 'Klien ini sudah melewati tahap assessment atau sudah diarsipkan.');
+                ->with('error', 'Penilaian tidak dapat dimulai karena layanan sudah dilanjutkan atau data sudah ditutup.');
         }
 
         // Admin mulai mengisi Tahap 2 -> data Tahap 1 terkunci
@@ -186,7 +186,7 @@ class AssessmentController extends Controller
     {
         if (! $this->canBeAssessed($client)) {
             return redirect()->route('clients.show', $client->id)
-                ->with('error', 'Assessment tidak dapat disimpan: klien sudah melewati tahap ini atau sudah diarsipkan.');
+                ->with('error', 'Hasil penilaian tidak dapat disimpan karena layanan sudah dilanjutkan atau data sudah ditutup.');
         }
 
         $validated = $this->validasi($request, $client);
@@ -210,7 +210,7 @@ class AssessmentController extends Controller
         User::role(['admin', 'super-admin'])->each(fn (User $admin) => $admin->notify(new AssessmentSelesai($client)));
 
         return redirect()->route('clients.show', $client->id)
-            ->with('success', 'Assessment berhasil disimpan.');
+            ->with('success', 'Hasil penilaian berhasil disimpan.');
     }
 
     /**
@@ -220,7 +220,7 @@ class AssessmentController extends Controller
     {
         if (! $this->canEditAssessment($client) || ! $client->assessment) {
             return redirect()->route('clients.show', $client->id)
-                ->with('error', 'Assessment tidak dapat diedit: klien sudah masuk penanganan, diarsipkan, atau belum di-assessment.');
+                ->with('error', 'Hasil penilaian tidak dapat diubah karena layanan sudah dilanjutkan, data ditutup, atau penilaian belum dilakukan.');
         }
 
         return view('assessments.create', ['client' => $client, 'assessment' => $client->assessment]);
@@ -233,7 +233,7 @@ class AssessmentController extends Controller
     {
         if (! $this->canEditAssessment($client) || ! $client->assessment) {
             return redirect()->route('clients.show', $client->id)
-                ->with('error', 'Assessment tidak dapat diedit: klien sudah masuk penanganan, diarsipkan, atau belum di-assessment.');
+                ->with('error', 'Hasil penilaian tidak dapat diubah karena layanan sudah dilanjutkan, data ditutup, atau penilaian belum dilakukan.');
         }
 
         $validated = $this->validasi($request, $client);
@@ -248,6 +248,6 @@ class AssessmentController extends Controller
         }
 
         return redirect()->route('clients.show', $client->id)
-            ->with('success', 'Assessment berhasil diperbarui.');
+            ->with('success', 'Hasil penilaian berhasil diperbarui.');
     }
 }

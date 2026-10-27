@@ -21,7 +21,7 @@ class KlienBaruMasuk extends Notification
         return [
             'client_id' => $this->client->id,
             'nama_lengkap' => $this->client->nama_lengkap,
-            'message' => "Klien baru \"{$this->client->nama_lengkap}\" perlu di-assessment.",
+            'message' => "Penerima layanan baru \"{$this->client->nama_lengkap}\" menunggu penilaian.",
             'url' => route('clients.show', $this->client->id),
         ];
     }

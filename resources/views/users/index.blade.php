@@ -1,7 +1,7 @@
 @extends('layouts.spark')
 
-@section('page-title', 'Manajemen Pengguna')
-@section('page-subtitle', 'Kelola akun dan hak akses pengguna sistem')
+@section('page-title', 'Daftar Akun Pengguna')
+@section('page-subtitle', 'Lihat dan atur akun petugas yang dapat menggunakan sistem')
 
 @section('content')
     @if (session('success'))
@@ -24,7 +24,7 @@
                     <tr>
                         <th>Nama</th>
                         <th>Email</th>
-                        <th>Role</th>
+                        <th>Tugas</th>
                         <th>Status</th>
                         <th class="text-end">Aksi</th>
                     </tr>
@@ -35,11 +35,11 @@
                             <td>{{ $user->name }}</td>
                             <td>{{ $user->email }}</td>
                             <td>
-                                {{ $user->getRoleNames()->map(fn ($role) => $role === 'super-admin' ? 'Super Admin' : 'Admin')->join(', ') ?: 'Belum ada role' }}
+                                {{ $user->getRoleNames()->map(fn ($role) => $role === 'super-admin' ? 'Pengelola utama' : 'Petugas')->join(', ') ?: 'Belum ada tugas' }}
                             </td>
                             <td>
                                 <span class="badge bg-{{ $user->is_active ? 'success' : 'secondary' }}">
-                                    {{ $user->is_active ? 'Aktif' : 'Nonaktif' }}
+                                    {{ $user->is_active ? 'Aktif' : 'Tidak aktif' }}
                                 </span>
                             </td>
                             <td class="text-end">

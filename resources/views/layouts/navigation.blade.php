@@ -13,26 +13,26 @@
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs(['dashboard', 'statistik.index'])">
-                        Dashboard Statistik
+                        Beranda Statistik
                     </x-nav-link>
                     <x-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
-                        Data Klien
+                        Data Penerima Layanan
                     </x-nav-link>
                     <x-nav-link :href="route('clients.create')" :active="request()->routeIs('clients.create')">
-                        Registrasi
+                        Pendaftaran Baru
                     </x-nav-link>
                     <x-nav-link :href="route('assessment.index')" :active="request()->routeIs('assessment.*')">
-                        Assessment
+                        Penilaian
                     </x-nav-link>
                     <x-nav-link :href="route('penanganan.dashboard')" :active="request()->routeIs('penanganan.*')">
-                        Penanganan
+                        Pendampingan
                     </x-nav-link>
                     <x-nav-link :href="route('exit-documents.mine')" :active="request()->routeIs('exit-documents.*')">
-                        Surat Saya
+                        Surat Keluar dan Rujukan
                     </x-nav-link>
                     @role('super-admin')
                         <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
-                            Manajemen Pengguna
+                            Kelola Akun Pengguna
                         </x-nav-link>
                     @endrole
                 </div>
@@ -55,7 +55,7 @@
 
                     <x-slot name="content">
                         <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
+                            Akun Saya
                         </x-dropdown-link>
 
                         <!-- Authentication -->
@@ -65,7 +65,7 @@
                             <x-dropdown-link :href="route('logout')"
                                     onclick="event.preventDefault();
                                                 this.closest('form').submit();">
-                                {{ __('Log Out') }}
+                                Keluar
                             </x-dropdown-link>
                         </form>
                     </x-slot>
@@ -88,23 +88,23 @@
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs(['dashboard', 'statistik.index'])">
-                Dashboard Statistik
+                Beranda Statistik
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
-                Data Klien
+                Data Penerima Layanan
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('assessment.index')" :active="request()->routeIs('assessment.*')">
-                Assessment
+                Penilaian
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('penanganan.dashboard')" :active="request()->routeIs('penanganan.*')">
-                Penanganan
+                Pendampingan
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('exit-documents.mine')" :active="request()->routeIs('exit-documents.*')">
-                Surat Saya
+                Surat Keluar dan Rujukan
             </x-responsive-nav-link>
             @role('super-admin')
                 <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
-                    Manajemen Pengguna
+                    Kelola Akun Pengguna
                 </x-responsive-nav-link>
             @endrole
         </div>
@@ -118,7 +118,7 @@
 
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
+                    Akun Saya
                 </x-responsive-nav-link>
 
                 <!-- Authentication -->
@@ -128,7 +128,7 @@
                     <x-responsive-nav-link :href="route('logout')"
                             onclick="event.preventDefault();
                                         this.closest('form').submit();">
-                        {{ __('Log Out') }}
+                        Keluar
                     </x-responsive-nav-link>
                 </form>
             </div>

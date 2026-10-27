@@ -1,7 +1,7 @@
 @extends('layouts.spark')
 
-@section('page-title', 'Dashboard Statistik')
-@section('page-subtitle', 'Ringkasan data dan perkembangan layanan PPKS')
+@section('page-title', 'Ringkasan Layanan')
+@section('hide-page-header', true)
 
 @push('styles')
     <style>
@@ -227,32 +227,6 @@
             font-size: .76rem;
         }
 
-        .statistics-table-wrap {
-            overflow: hidden;
-            border: 1px solid var(--stats-border);
-            border-radius: 1rem;
-            background: #fff;
-            box-shadow: 0 8px 24px rgb(27 54 42 / 4%);
-        }
-
-        .statistics-table-heading {
-            padding: 1.25rem 1.4rem;
-            border-bottom: 1px solid var(--stats-border);
-        }
-
-        .statistics-table-heading h3 {
-            margin: 0 0 .25rem;
-            color: var(--stats-ink);
-            font-size: 1rem;
-            font-weight: 750;
-        }
-
-        .statistics-table-heading p {
-            margin: 0;
-            color: var(--stats-muted);
-            font-size: .78rem;
-        }
-
         @media (max-width: 575.98px) {
             .statistics-hero {
                 align-items: stretch;
@@ -277,21 +251,20 @@
 <div class="statistics-dashboard">
 <section class="statistics-hero">
     <div>
-        <div class="statistics-eyebrow"><i class="bi bi-stars" aria-hidden="true"></i> Pusat Data Pelayanan</div>
-        <h2>Gambaran layanan dalam satu layar</h2>
-        <p>Pantau perkembangan penerima manfaat, status penanganan, dan karakteristik layanan PPKS.</p>
-    </div>
+        <div class="statistics-eyebrow"><i class="bi bi-stars" aria-hidden="true"></i> Ringkasan Layanan</div>
+        <p>Lihat jumlah penerima layanan dan perkembangan pelayanan sosial.</p>
+</div>
     <div class="statistics-export-card">
         <span class="statistics-export-icon" aria-hidden="true">
             <i class="bi bi-file-earmark-spreadsheet"></i>
         </span>
         <div>
-            <div class="fw-bold text-dark small">Ekspor laporan statistik</div>
-            <div class="small text-muted">Unduh rekap dalam format Excel (.xlsx)</div>
+            <div class="fw-bold text-dark small">Unduh laporan</div>
+            <div class="small text-muted">Simpan ringkasan dalam berkas Excel</div>
         </div>
         <a href="{{ route('statistik.export') }}" class="statistics-export-button">
             <i class="bi bi-download" aria-hidden="true"></i>
-            <span>Unduh data Excel</span>
+            <span>Unduh laporan Excel</span>
         </a>
     </div>
 </section>
@@ -304,29 +277,29 @@
                 <span class="statistics-kpi-icon statistics-kpi-icon--green" aria-hidden="true"><i class="bi bi-people"></i></span>
             </div>
             <div class="statistics-kpi-value">{{ number_format($totalKlien, 0, ',', '.') }}</div>
-            <div class="statistics-kpi-note">Seluruh klien yang tercatat dalam sistem</div>
+            <div class="statistics-kpi-note">Semua penerima layanan yang sudah didaftarkan</div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="statistics-kpi">
             <div class="statistics-kpi-top">
-                <div class="statistics-kpi-label">Rata-rata Lama Penanganan</div>
+                <div class="statistics-kpi-label">Rata-rata Lama Pendampingan</div>
                 <span class="statistics-kpi-icon statistics-kpi-icon--blue" aria-hidden="true"><i class="bi bi-clock-history"></i></span>
             </div>
             <div class="statistics-kpi-value">
                 {{ $rataRataLamaHari !== null ? $rataRataLamaHari . ' hari' : '—' }}
             </div>
-            <div class="statistics-kpi-note">{{ $rataRataLamaHari === null ? 'Belum ada klien selesai' : 'Rata-rata durasi sampai klien selesai atau dirujuk' }}</div>
+            <div class="statistics-kpi-note">{{ $rataRataLamaHari === null ? 'Belum ada layanan yang selesai' : 'Waktu dari pendaftaran sampai layanan selesai atau rujukan' }}</div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="statistics-kpi">
             <div class="statistics-kpi-top">
-                <div class="statistics-kpi-label">Klien Belum Dikategorikan</div>
+                <div class="statistics-kpi-label">Jenis kebutuhan belum diisi</div>
                 <span class="statistics-kpi-icon statistics-kpi-icon--amber" aria-hidden="true"><i class="bi bi-tags"></i></span>
             </div>
             <div class="statistics-kpi-value">{{ number_format($totalTanpaKategori, 0, ',', '.') }}</div>
-            <div class="statistics-kpi-note">Perlu dilengkapi kategori PPKS-nya</div>
+            <div class="statistics-kpi-note">Data ini perlu dilengkapi oleh petugas</div>
         </div>
     </div>
 </div>
@@ -336,7 +309,7 @@
         <div class="statistics-section">
             <div class="statistics-section-heading">
                 <span class="statistics-section-icon" aria-hidden="true"><i class="bi bi-bar-chart-line"></i></span>
-                <div><h3>Breakdown Status Klien</h3><p>Jumlah klien pada setiap tahap pelayanan</p></div>
+                <div><h3>Jumlah Penerima Layanan per Tahap</h3><p>Jumlah orang pada setiap tahap layanan</p></div>
             </div>
             <div id="chart-status"></div>
         </div>
@@ -345,7 +318,7 @@
         <div class="statistics-section">
             <div class="statistics-section-heading">
                 <span class="statistics-section-icon" aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></span>
-                <div><h3>Tren Klien Masuk</h3><p>Perubahan jumlah klien dalam 6 bulan terakhir</p></div>
+                <div><h3>Pendaftaran Baru</h3><p>Jumlah penerima layanan yang didaftarkan dalam 12 bulan terakhir</p></div>
             </div>
             <div id="chart-tren"></div>
         </div>
@@ -353,31 +326,34 @@
 </div>
 
 <div class="row g-4 mb-2">
-    <div class="col-lg-4">
+    <div class="col-12 col-md-6">
         <div class="statistics-section">
             <div class="statistics-section-heading">
                 <span class="statistics-section-icon" aria-hidden="true"><i class="bi bi-gender-ambiguous"></i></span>
-                <div><h3>Pilah Jenis Kelamin</h3><p>Komposisi klien berdasarkan jenis kelamin</p></div>
+                <div><h3>Jenis Kelamin</h3><p>Jumlah penerima layanan berdasarkan jenis kelamin</p></div>
             </div>
             <div id="chart-gender"></div>
-            <p class="text-muted small mt-2 mb-0">*Dari klien yang sudah melalui Assessment</p>
+            <p class="text-muted small mt-2 mb-0">*Dihitung dari penerima layanan yang sudah dinilai</p>
         </div>
     </div>
-    <div class="col-lg-4">
+    <div class="col-12 col-md-6">
         <div class="statistics-section">
             <div class="statistics-section-heading">
                 <span class="statistics-section-icon" aria-hidden="true"><i class="bi bi-person-badge"></i></span>
-                <div><h3>Pilah Kelompok Usia</h3><p>Komposisi klien berdasarkan kelompok usia</p></div>
+                <div><h3>Kelompok Usia</h3><p>Jumlah penerima layanan berdasarkan usia</p></div>
             </div>
             <div id="chart-usia"></div>
-            <p class="text-muted small mt-2 mb-0">*Dari klien yang sudah melalui Assessment</p>
+            <p class="text-muted small mt-2 mb-0">*Dihitung dari penerima layanan yang sudah dinilai</p>
         </div>
     </div>
-    <div class="col-lg-4">
+ </div>
+
+<div class="row g-4 mb-2">
+    <div class="col-12">
         <div class="statistics-section">
             <div class="statistics-section-heading">
                 <span class="statistics-section-icon" aria-hidden="true"><i class="bi bi-collection"></i></span>
-                <div><h3>Kategori PPKS</h3><p>Jumlah klien per kategori</p></div>
+                <div><h3>Jenis Kebutuhan Layanan</h3><p>Jumlah penerima layanan untuk setiap jenis kebutuhan</p></div>
             </div>
             @if ($kategoriBreakdown->isEmpty())
                 <p class="text-muted">Belum ada data kategori.</p>
@@ -388,33 +364,18 @@
     </div>
 </div>
 
-<div class="row g-4">
-    <div class="col-12">
-        <div class="statistics-table-wrap">
-            <div class="statistics-table-heading">
-                <h3>5 Sumber Aduan Terbanyak</h3>
-                <p>Sumber laporan dengan jumlah klien tertinggi</p>
-            </div>
-            <div class="table-responsive">
-                <table class="table-custom">
-                    <thead>
-                        <tr>
-                            <th>Sumber Aduan</th>
-                            <th>Jumlah Klien</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($sumberAduanBreakdown as $row)
-                            <tr>
-                                <td>{{ $row->sumber_aduan }}</td>
-                                <td>{{ $row->total }}</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="2" class="text-center py-3">Belum ada data.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="statistics-section">
+                <div class="statistics-section-heading">
+                    <span class="statistics-section-icon" aria-hidden="true"><i class="bi bi-megaphone"></i></span>
+                    <div><h3>5 Sumber Aduan Terbanyak</h3><p>Jumlah penerima layanan dari setiap sumber laporan</p></div>
+                </div>
+                @if ($sumberAduanBreakdown->isEmpty())
+                    <p class="text-muted mb-0">Belum ada data sumber aduan.</p>
+                @else
+                    <div id="chart-sumber-aduan"></div>
+                @endif
             </div>
         </div>
     </div>
@@ -449,26 +410,33 @@ document.addEventListener('DOMContentLoaded', function () {
     new ApexCharts(document.querySelector("#chart-status"), {
         ...chartBase,
         chart: { ...chartBase.chart, type: 'bar', height: 270, toolbar: { show: false } },
-        series: [{ name: 'Jumlah Klien', data: @json(array_column($statusBreakdown, 'total')) }],
+        series: [{ name: 'Jumlah Penerima Layanan', data: @json(array_column($statusBreakdown, 'total')) }],
         xaxis: {
             categories: @json(array_column($statusBreakdown, 'label')),
-            labels: { style: { colors: chartText } },
+            labels: { style: { colors: chartText, fontSize: '12px' } },
             axisBorder: { show: false },
             axisTicks: { show: false },
         },
         yaxis: { labels: { style: { colors: chartText } } },
-        colors: ['#198754'],
+        colors: ['#64748b', '#3974d5', '#198754', '#29a875', '#8870cf'],
         plotOptions: {
             bar: {
-                horizontal: true,
+                horizontal: false,
                 borderRadius: 6,
-                barHeight: '54%',
+                columnWidth: '58%',
                 distributed: true,
                 dataLabels: { position: 'top' },
             },
         },
-        dataLabels: { ...chartBase.dataLabels, enabled: true, offsetX: 10 },
-        grid: { ...chartBase.grid, padding: { left: 4, right: 20 } },
+        dataLabels: {
+            ...chartBase.dataLabels,
+            enabled: true,
+            offsetY: -8,
+            style: { ...chartBase.dataLabels.style, colors: [chartText] },
+            formatter: (value) => Number(value).toLocaleString('id-ID'),
+        },
+        tooltip: { y: { formatter: (value) => `${Number(value).toLocaleString('id-ID')} orang` } },
+        grid: { ...chartBase.grid, padding: { left: 8, right: 24 } },
         legend: { show: false },
     }).render();
 
@@ -476,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function () {
     new ApexCharts(document.querySelector("#chart-tren"), {
         ...chartBase,
         chart: { ...chartBase.chart, type: 'area', height: 270, toolbar: { show: false } },
-        series: [{ name: 'Klien Masuk', data: @json($trenBulanan->pluck('total')) }],
+        series: [{ name: 'Pendaftaran Baru', data: @json($trenBulanan->pluck('total')) }],
         xaxis: {
             categories: @json($trenBulanan->pluck('label')),
             labels: { style: { colors: chartText } },
@@ -492,46 +460,167 @@ document.addEventListener('DOMContentLoaded', function () {
         grid: { ...chartBase.grid, padding: { left: 8, right: 8 } },
     }).render();
 
-    // Gender (donut)
+    // Jenis kelamin (bar chart)
     new ApexCharts(document.querySelector("#chart-gender"), {
         ...chartBase,
-        chart: { ...chartBase.chart, type: 'donut', height: 250 },
-        series: @json(array_values($genderBreakdown)),
-        labels: @json(array_keys($genderBreakdown)),
+        chart: { ...chartBase.chart, type: 'bar', height: 250, toolbar: { show: false } },
+        series: [{ name: 'Jumlah Penerima Layanan', data: @json(array_values($genderBreakdown)) }],
+        xaxis: {
+            categories: @json(array_keys($genderBreakdown)),
+            labels: { style: { colors: chartText } },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+        },
+        yaxis: {
+            min: 0,
+            forceNiceScale: true,
+            labels: { style: { colors: chartText } },
+        },
+        plotOptions: {
+            bar: {
+                horizontal: false,
+                borderRadius: 5,
+                columnWidth: '48%',
+                distributed: true,
+                dataLabels: { position: 'top' },
+            },
+        },
         colors: ['#3974d5', '#e36b9a'],
-        stroke: { width: 4, colors: ['#fff'] },
-        dataLabels: { enabled: false },
-        plotOptions: { pie: { donut: { size: '72%' } } },
-        legend: chartBase.legend,
+        dataLabels: {
+            ...chartBase.dataLabels,
+            enabled: true,
+            offsetY: -8,
+            style: { ...chartBase.dataLabels.style, colors: [chartText] },
+            formatter: (value) => Number(value).toLocaleString('id-ID'),
+        },
+        grid: { ...chartBase.grid, padding: { right: 16 } },
+        legend: { show: false },
+        tooltip: { y: { formatter: (value) => `${Number(value).toLocaleString('id-ID')} orang` } },
     }).render();
 
-    // Usia (donut)
+    // Kelompok usia (bar chart)
     new ApexCharts(document.querySelector("#chart-usia"), {
         ...chartBase,
-        chart: { ...chartBase.chart, type: 'donut', height: 250 },
-        series: @json(array_values($ageBuckets)),
-        labels: @json(array_keys($ageBuckets)),
+        chart: { ...chartBase.chart, type: 'bar', height: 250, toolbar: { show: false } },
+        series: [{ name: 'Jumlah Penerima Layanan', data: @json(array_values($ageBuckets)) }],
+        xaxis: {
+            categories: @json(array_keys($ageBuckets)),
+            labels: { style: { colors: chartText } },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+        },
+        yaxis: {
+            min: 0,
+            forceNiceScale: true,
+            labels: { style: { colors: chartText } },
+        },
+        plotOptions: {
+            bar: {
+                horizontal: false,
+                borderRadius: 5,
+                columnWidth: '48%',
+                distributed: true,
+                dataLabels: { position: 'top' },
+            },
+        },
         colors: ['#f1ae37', '#29a875', '#8870cf'],
-        stroke: { width: 4, colors: ['#fff'] },
-        dataLabels: { enabled: false },
-        plotOptions: { pie: { donut: { size: '72%' } } },
-        legend: chartBase.legend,
+        dataLabels: {
+            ...chartBase.dataLabels,
+            enabled: true,
+            offsetY: -8,
+            style: { ...chartBase.dataLabels.style, colors: [chartText] },
+            formatter: (value) => Number(value).toLocaleString('id-ID'),
+        },
+        grid: { ...chartBase.grid, padding: { top: 16, right: 16, bottom: 24 } },
+        legend: { show: false },
+        tooltip: { y: { formatter: (value) => `${Number(value).toLocaleString('id-ID')} orang` } },
     }).render();
 
     @if ($kategoriBreakdown->isNotEmpty())
-    // Kategori PPKS (bar horizontal)
+    // Kategori PPKS (bar vertikal)
     new ApexCharts(document.querySelector("#chart-kategori"), {
         ...chartBase,
-        chart: { ...chartBase.chart, type: 'bar', height: 250, toolbar: { show: false } },
-        series: [{ name: 'Jumlah', data: @json($kategoriBreakdown->pluck('total')) }],
+        chart: { ...chartBase.chart, type: 'bar', height: 320, toolbar: { show: false } },
+        series: [{ name: 'Jumlah Penerima Layanan', data: @json($kategoriBreakdown->pluck('total')) }],
         xaxis: {
             categories: @json($kategoriBreakdown->pluck('kategori_ppks')),
+            labels: {
+                rotate: -45,
+                rotateAlways: true,
+                trim: false,
+                style: { colors: chartText, fontSize: '10px' },
+            },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+        },
+        yaxis: {
+            min: 0,
+            forceNiceScale: true,
             labels: { style: { colors: chartText } },
         },
-        plotOptions: { bar: { horizontal: true, borderRadius: 5, barHeight: '56%' } },
+        plotOptions: {
+            bar: {
+                horizontal: false,
+                borderRadius: 5,
+                columnWidth: '56%',
+                distributed: true,
+                dataLabels: { position: 'top' },
+            },
+        },
         colors: ['#df8c35'],
-        dataLabels: { ...chartBase.dataLabels, enabled: true, offsetX: 8 },
-        grid: { ...chartBase.grid, padding: { right: 16 } },
+        dataLabels: {
+            ...chartBase.dataLabels,
+            enabled: true,
+            offsetY: -8,
+            style: { ...chartBase.dataLabels.style, colors: [chartText] },
+            formatter: (value) => Number(value).toLocaleString('id-ID'),
+        },
+        tooltip: { y: { formatter: (value) => `${Number(value).toLocaleString('id-ID')} orang` } },
+        grid: { ...chartBase.grid, padding: { left: 8, right: 16, bottom: 24 } },
+        legend: { show: false },
+    }).render();
+    @endif
+
+    @if ($sumberAduanBreakdown->isNotEmpty())
+    // Sumber aduan (bar horizontal)
+    new ApexCharts(document.querySelector("#chart-sumber-aduan"), {
+        ...chartBase,
+        chart: {
+            ...chartBase.chart,
+            type: 'bar',
+            height: Math.max(220, {{ $sumberAduanBreakdown->count() }} * 52),
+            toolbar: { show: false },
+        },
+        series: [{ name: 'Jumlah Penerima Layanan', data: @json($sumberAduanBreakdown->pluck('total')) }],
+        xaxis: {
+            categories: @json($sumberAduanBreakdown->pluck('sumber_aduan')),
+            min: 0,
+            forceNiceScale: true,
+            labels: { style: { colors: chartText } },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+        },
+        yaxis: {
+            labels: { style: { colors: chartText, fontSize: '12px' } },
+        },
+        plotOptions: {
+            bar: {
+                horizontal: true,
+                borderRadius: 5,
+                barHeight: '58%',
+                dataLabels: { position: 'right' },
+            },
+        },
+        colors: ['#198754'],
+        dataLabels: {
+            ...chartBase.dataLabels,
+            enabled: true,
+            offsetX: 8,
+            style: { ...chartBase.dataLabels.style, colors: [chartText] },
+            formatter: (value) => Number(value).toLocaleString('id-ID'),
+        },
+        tooltip: { y: { formatter: (value) => `${Number(value).toLocaleString('id-ID')} orang` } },
+        grid: { ...chartBase.grid, padding: { left: 8, right: 24 } },
         legend: { show: false },
     }).render();
     @endif

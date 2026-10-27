@@ -47,7 +47,7 @@ class ClientExitDocumentController extends Controller
     {
         $user = auth()->user();
         abort_unless($user->hasAnyRole(['admin', 'super-admin']), 403);
-        abort_unless(in_array($document->status, ['selesai', 'disetujui'], true), 403, 'PDF final tidak tersedia untuk surat ini.');
+        abort_unless(in_array($document->status, ['selesai', 'disetujui'], true), 403, 'Surat ini belum tersedia untuk diunduh.');
         abort_unless($document->pdf_path && Storage::disk('local')->exists($document->pdf_path), 404);
 
         $this->generatePdf($document);
@@ -93,15 +93,15 @@ class ClientExitDocumentController extends Controller
     public function store(Request $request, Client $client): RedirectResponse
     {
         if (! in_array($client->status, [Client::STATUS_ASSESSMENT, Client::STATUS_PENANGANAN], true)) {
-            return back()->with('error', 'Surat hanya dapat dibuat untuk klien yang sedang dalam penanganan.');
+            return back()->with('error', 'Surat hanya dapat dibuat untuk penerima layanan yang siap atau sedang didampingi.');
         }
 
         if ($client->is_archived) {
-            return back()->with('error', 'Klien ini sudah diarsipkan.');
+            return back()->with('error', 'Data penerima layanan ini sudah ditutup.');
         }
 
         if ($client->exitDocuments()->where('status', 'ditolak')->exists()) {
-            return back()->with('error', 'Surat sebelumnya ditolak. Perbaiki dan ajukan ulang dari menu "Surat Saya".');
+            return back()->with('error', 'Surat sebelumnya perlu diperbaiki. Silakan ubah melalui menu "Surat Keluar dan Rujukan".');
         }
 
         $validated = $request->validate([
@@ -111,12 +111,7 @@ class ClientExitDocumentController extends Controller
             'tujuan' => ['required', 'string', 'max:255'],
             'keterangan' => ['nullable', 'string'],
             'tanggal_keluar' => ['required', 'date', 'after_or_equal:' . $client->tanggal_masuk, 'before_or_equal:today'],
-            'no_hp_penanggung_jawab' => [
-                'required', 'string', 'max:20',
-                Rule::unique('clients', 'no_hp_penanggung_jawab')->ignore($client->id),
-                Rule::unique('client_exit_documents', 'no_hp_penanggung_jawab')
-                    ->where(fn ($query) => $query->where('client_id', '!=', $client->id)),
-            ],
+            'no_hp_penanggung_jawab' => ['required', 'string', 'max:20'],
         ]);
 
         DB::transaction(function () use ($validated, $client) {
@@ -144,14 +139,14 @@ class ClientExitDocumentController extends Controller
         });
 
         return redirect()->route('exit-documents.mine')
-            ->with('success', 'Surat berhasil diterbitkan dan klien telah ditandai selesai.');
+            ->with('success', 'Surat berhasil dibuat. Layanan ditandai selesai.');
     }
 
     public function edit(ClientExitDocument $document): View|RedirectResponse
     {
         if ($document->created_by !== auth()->id() || $document->status !== 'ditolak') {
             return redirect()->route('exit-documents.mine')
-                ->with('error', 'Hanya surat Anda yang ditolak yang dapat diperbaiki.');
+                ->with('error', 'Hanya surat yang Anda buat dan perlu diperbaiki yang dapat diubah.');
         }
 
         return view('exit-documents.edit', compact('document'));
@@ -176,12 +171,7 @@ class ClientExitDocumentController extends Controller
             'tujuan' => ['required', 'string', 'max:255'],
             'keterangan' => ['nullable', 'string'],
             'tanggal_keluar' => ['required', 'date', 'after_or_equal:' . $document->client->tanggal_masuk, 'before_or_equal:today'],
-            'no_hp_penanggung_jawab' => [
-                'required', 'string', 'max:20',
-                Rule::unique('clients', 'no_hp_penanggung_jawab')->ignore($document->client_id),
-                Rule::unique('client_exit_documents', 'no_hp_penanggung_jawab')
-                    ->where(fn ($query) => $query->where('client_id', '!=', $document->client_id)),
-            ],
+            'no_hp_penanggung_jawab' => ['required', 'string', 'max:20'],
         ]);
 
         DB::transaction(function () use ($validated, $document) {
@@ -211,6 +201,6 @@ class ClientExitDocumentController extends Controller
         });
 
         return redirect()->route('exit-documents.mine')
-            ->with('success', 'Surat lama berhasil diperbaiki dan diterbitkan kembali.');
+            ->with('success', 'Surat berhasil diperbaiki dan dibuat kembali.');
     }
 }

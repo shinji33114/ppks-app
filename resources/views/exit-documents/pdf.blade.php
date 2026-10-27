@@ -24,8 +24,8 @@
         .photo-frame { border: 1px solid #777; display: inline-block; height: 120px; padding: 3px; text-align: center; width: 85px; }
         .client-photo { max-height: 118px; max-width: 83px; }
         .photo-placeholder { color: #666; font-size: 7pt; height: 110px; padding-top: 8px; }
-        .signatures { margin-top: 18px; }
-        .signatures td { text-align: center; vertical-align: top; }
+        .signatures { margin-top: 18px; table-layout: fixed; }
+        .signatures td { text-align: center; vertical-align: top; width: 50%; }
         .signature-space { height: 45px; }
         .name { font-weight: bold; text-decoration: underline; }
     </style>
@@ -56,7 +56,7 @@
             <td class="photo-cell">
                 <div class="photo-frame">
                     @if ($photoFileUri)
-                        <img class="client-photo" src="{{ $photoFileUri }}" alt="Foto Klien">
+                        <img class="client-photo" src="{{ $photoFileUri }}" alt="Foto Penerima Layanan">
                     @else
                         <div class="photo-placeholder">Foto tidak tersedia</div>
                     @endif
@@ -66,15 +66,15 @@
     </table>
 
     <p>Dengan hormat,</p>
-    <p>Melalui surat ini kami menerbitkan keterangan {{ $document->type === 'rujukan' ? 'rujukan' : 'keluar/pemulangan' }} untuk klien berikut:</p>
+    <p>Surat ini menerangkan bahwa penerima layanan berikut telah mendapatkan {{ $document->type === 'rujukan' ? 'rujukan' : 'layanan dan pemulangan' }}:</p>
 
     <table class="identity">
         <tr><td>Nama Lengkap</td><td>{{ $document->client->nama_lengkap }}</td></tr>
-        <tr><td>NIK</td><td>{{ $assessment?->nik ?: '-' }}</td></tr>
+        <tr><td>Nomor Induk Kependudukan (NIK)</td><td>{{ $assessment?->nik ?: '-' }}</td></tr>
         <tr><td>Jenis Kelamin</td><td>{{ $assessment?->jenis_kelamin ?: '-' }}</td></tr>
         <tr><td>Alamat</td><td>{{ $assessment?->alamat_domisili ?: '-' }}</td></tr>
         <tr><td>Tanggal Masuk</td><td>{{ $document->client->tanggal_masuk->format('d-m-Y') }}</td></tr>
-        <tr><td>Tanggal Keluar</td><td>{{ $document->tanggal_keluar->format('d-m-Y') }}</td></tr>
+        <tr><td>Tanggal Layanan Berakhir</td><td>{{ $document->tanggal_keluar->format('d-m-Y') }}</td></tr>
         <tr><td>Penanggung Jawab</td><td>{{ $document->no_hp_penanggung_jawab }}</td></tr>
     </table>
 
@@ -86,9 +86,16 @@
 
     <table class="signatures">
         <tr>
-            <td colspan="2">
+            <td>
+                Mengetahui,<br>
+                Kepala Dinas
+                <div class="signature-space"></div>
+                <div class="name">........................................</div>
+                <div>NIP. ................................</div>
+            </td>
+            <td>
                 {{ $document->tanggal_surat->translatedFormat('d F Y') }}<br>
-                Admin
+                Petugas
                 <div class="signature-space"></div>
                 <div class="name">{{ $document->creator->name ?? 'Admin' }}</div>
             </td>

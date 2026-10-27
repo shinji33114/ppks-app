@@ -1,15 +1,13 @@
 @extends('layouts.spark')
 
-@section('page-title', 'Data Klien')
-@section('page-subtitle', 'Semua klien yang tercatat dalam sistem')
 
 @section('content')
 @php
     $stages = [
-        'draft' => ['Registrasi', 'Tahap 1'],
-        'assessment' => ['Assessment', 'Tahap 2'],
-        'penanganan' => ['Penanganan', 'Tahap 3'],
-        'final' => ['Selesai / Dirujuk', 'Hasil akhir'],
+        'draft' => 'Pendaftaran',
+        'assessment' => 'Penilaian Informasi',
+        'penanganan' => 'Pendampingan',
+        'final' => 'Selesai / Dirujuk',
     ];
     $stageIcons = [
         'draft' => 'bi-person-vcard',
@@ -77,6 +75,7 @@
     .client-result-count { padding: .35rem .7rem; border-radius: 2rem; background: #f1f5f3; color: #53665d; font-size: .78rem; font-weight: 600; white-space: nowrap; }
     .client-filter-bar { display: flex; flex-wrap: wrap; align-items: end; gap: .85rem; padding: 1rem 1.5rem; border-top: 1px solid #edf0ee; border-bottom: 1px solid #edf0ee; background: #fafcfb; }
     .client-filter-field { min-width: 220px; }
+    .client-search-field { flex: 1 1 320px; }
     .client-filter-field label { display: block; margin-bottom: .35rem; color: #65766e; font-size: .76rem; font-weight: 600; }
     .client-filter-input { min-height: 40px; border-color: #dfe7e2; border-radius: .65rem; }
     .client-filter-input:focus { border-color: #65a68a; box-shadow: 0 0 0 .2rem rgba(19, 121, 91, .12); }
@@ -148,19 +147,19 @@
         <div class="client-overview-content">
             <div class="client-overview-icon"><i class="bi bi-people-fill"></i></div>
             <div>
-                <div class="client-overview-eyebrow">Manajemen klien</div>
-                <h2 class="client-overview-title">Pantau progres layanan</h2>
-                <p class="client-overview-copy">Pilih tahap untuk melihat klien, atau gunakan filter tanggal masuk.</p>
+                <div class="client-overview-eyebrow">Data penerima layanan</div>
+                <h2 class="client-overview-title">Periksa perkembangan layanan</h2>
+                <p class="client-overview-copy">Pilih tahap layanan atau cari berdasarkan tanggal masuk.</p>
             </div>
         </div>
         <div class="client-overview-total">
             <strong>{{ number_format($clients->total()) }}</strong>
-            <span>{{ $stage || $tanggalMasuk ? 'klien ditemukan' : 'klien tercatat' }}</span>
+            <span>{{ $stage || $tanggalMasuk ? 'penerima layanan ditemukan' : 'penerima layanan tercatat' }}</span>
         </div>
     </section>
 
-    <section class="row g-3 mb-4" aria-label="Tahap progres klien">
-        @foreach ($stages as $stageKey => [$stageName, $stageSub])
+    <section class="row g-3 mb-4" aria-label="Tahap layanan">
+        @foreach ($stages as $stageKey => $stageName)
             <div class="col-6 col-xl-3">
                 <a
                     href="{{ route('clients.index', array_merge(request()->except(['page', 'stage']), ['stage' => $stageKey])) }}"
@@ -169,23 +168,22 @@
                     @if ($stage === $stageKey) aria-current="step" @endif
                 >
                     <div class="client-stage-top">
-                        <span class="client-stage-index"><i class="bi {{ $stageIcons[$stageKey] }}"></i> {{ $stageSub }}</span>
-                        <span class="client-stage-count">{{ number_format($stageCounts[$stageKey]) }} klien</span>
+                        <span class="client-stage-index"><i class="bi {{ $stageIcons[$stageKey] }}"></i> {{ $stageName }}</span>
+                        <span class="client-stage-count">{{ number_format($stageCounts[$stageKey]) }} orang</span>
                     </div>
-                    <h3 class="client-stage-title">{{ $stageName }}</h3>
                     <div class="client-stage-subtitle">
                         @if ($stageKey === 'draft')
-                            Menunggu proses assessment
+                            Menunggu penilaian
                         @elseif ($stageKey === 'assessment')
-                            Sedang dalam proses assessment
+                            Sedang dinilai
                         @elseif ($stageKey === 'penanganan')
-                            Sedang menerima penanganan
+                            Sedang ditangani
                         @else
-                            Proses telah selesai atau dirujuk
+                            Layanan selesai atau penerima layanan dirujuk
                         @endif
                     </div>
                     <div class="client-stage-footer">
-                        <span>{{ $stage === $stageKey ? 'Tahap terpilih' : 'Lihat daftar tahap' }}</span>
+                        <span>{{ $stage === $stageKey ? 'Tahap yang dipilih' : 'Lihat tahap ini' }}</span>
                         <i class="bi bi-arrow-right"></i>
                     </div>
                 </a>
@@ -198,18 +196,11 @@
             <div class="client-list-heading">
                 <div class="client-list-heading-icon"><i class="bi bi-list-ul"></i></div>
                 <div>
-                    <h3 class="client-list-title">{{ $stage ? 'Klien tahap ' . $stages[$stage][0] : 'Daftar Klien' }}</h3>
-                    <div class="client-list-caption">Informasi klien yang tercatat dalam sistem</div>
+                    <h3 class="client-list-title">{{ $stage ? 'Penerima layanan — ' . $stages[$stage] : 'Daftar Penerima Layanan' }}</h3>
+                    <div class="client-list-caption">Orang yang sudah didaftarkan untuk menerima layanan</div>
                 </div>
             </div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="client-result-count">{{ number_format($clients->total()) }} hasil</span>
-                @hasanyrole('admin|super-admin')
-                    <a href="{{ route('clients.create') }}" class="btn-custom btn-custom-primary">
-                        <i class="bi bi-plus-lg me-1"></i> <span class="d-none d-sm-inline">Registrasi Klien</span><span class="d-sm-none">Tambah</span>
-                    </a>
-                @endhasanyrole
-            </div>
+            
         </div>
 
         @if ($stage || $tanggalMasuk)
@@ -217,7 +208,7 @@
                 <div class="d-flex flex-wrap gap-2">
                     @if ($stage)
                         <a href="{{ route('clients.index', request()->except(['page', 'stage'])) }}" class="badge rounded-pill text-bg-success text-decoration-none">
-                            <i class="bi bi-activity me-1"></i>{{ $stages[$stage][0] }} <i class="bi bi-x ms-1"></i>
+                            <i class="bi bi-activity me-1"></i>{{ $stages[$stage] }} <i class="bi bi-x ms-1"></i>
                         </a>
                     @endif
                     @if ($tanggalMasuk)
@@ -233,11 +224,19 @@
             @if ($stage)
                 <input type="hidden" name="stage" value="{{ $stage }}">
             @endif
-            @if (request('search'))
-                <input type="hidden" name="search" value="{{ request('search') }}">
-            @endif
+            <div class="client-filter-field client-search-field">
+                <label for="filter-search"><i class="bi bi-search me-1"></i> Cari nama penerima layanan</label>
+                <input
+                    type="search"
+                    id="filter-search"
+                    name="search"
+                    value="{{ request('search') }}"
+                    placeholder="Ketik nama atau nama panggilan"
+                    class="form-control client-filter-input"
+                >
+            </div>
             <div class="client-filter-field">
-                <label for="filter-tanggal-masuk"><i class="bi bi-calendar3 me-1"></i> Filter berdasarkan tanggal masuk</label>
+                <label for="filter-tanggal-masuk"><i class="bi bi-calendar3 me-1"></i> Tanggal masuk</label>
                 <input
                     type="date"
                     id="filter-tanggal-masuk"
@@ -248,8 +247,13 @@
                 >
             </div>
             <button type="submit" class="btn-custom btn-custom-primary">
-                <i class="bi bi-funnel me-1"></i> Terapkan filter
+                <i class="bi bi-search me-1"></i> Cari
             </button>
+            @if (request('search'))
+                <a href="{{ route('clients.index', request()->except(['page', 'search'])) }}" class="btn-custom btn-custom-secondary">
+                    Hapus pencarian
+                </a>
+            @endif
             @if ($tanggalMasuk)
                 <a href="{{ route('clients.index', request()->except(['page', 'tanggal_masuk'])) }}" class="btn-custom btn-custom-secondary">
                     Hapus tanggal
@@ -267,18 +271,18 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Nama Klien</th>
+                        <th>Nama Penerima Layanan</th>
                         <th>Tanggal Masuk</th>
                         <th>Sumber Aduan</th>
-                        <th>Status</th>
-                        <th class="text-end">Aksi</th>
+                        <th>Status Layanan</th>
+                        <th class="text-end">Pilihan</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($clients as $client)
                         <tr class="client-data-row">
                             <td data-label="Nomor"><span class="client-row-number">{{ $loop->iteration + ($clients->currentPage() - 1) * $clients->perPage() }}</span></td>
-                            <td data-label="Nama klien">
+                            <td data-label="Nama penerima layanan">
                                 <div class="client-name-cell">
                                     <span class="client-avatar"><i class="bi bi-person-fill"></i></span>
                                     <div>
@@ -294,7 +298,7 @@
                             <td data-label="Status">
                                 <span class="badge-table {{ $client->status_badge_class }}">{{ $client->status_label }}</span>
                             </td>
-                            <td data-label="Detail klien" class="text-end">
+                            <td data-label="Pilihan" class="text-end">
                                 <div class="table-action-group justify-content-end">
                                     <a href="{{ route('clients.show', $client->id) }}" class="table-btn-action" title="Lihat detail" aria-label="Lihat detail {{ $client->nama_lengkap }}">
                                         <i class="bi bi-arrow-up-right"></i>
@@ -306,10 +310,10 @@
                         <tr class="client-empty-row">
                             <td colspan="6" class="client-empty-state">
                                 <div class="client-empty-icon"><i class="bi bi-person-search"></i></div>
-                                <div class="fw-semibold text-dark">Klien tidak ditemukan</div>
-                                <div class="text-muted small mt-1">Coba ubah filter tanggal atau pilih tahap lainnya.</div>
+                                <div class="fw-semibold text-dark">Data tidak ditemukan</div>
+                                <div class="text-muted small mt-1">Periksa nama, tanggal masuk, atau tahap layanan.</div>
                                 @if ($stage || $tanggalMasuk)
-                                    <a href="{{ route('clients.index') }}" class="btn-custom btn-custom-secondary mt-3">Hapus semua filter</a>
+                                    <a href="{{ route('clients.index') }}" class="btn-custom btn-custom-secondary mt-3">Tampilkan semua data</a>
                                 @endif
                             </td>
                         </tr>

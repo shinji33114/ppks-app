@@ -95,7 +95,7 @@ class ArchiveRevisionController extends Controller
 
         if (empty($changes)) {
             return redirect()->route('clients.show', $client->id)
-                ->with('error', 'Tidak ada perubahan yang disimpan — data yang dikirim sama dengan data sebelumnya.');
+                ->with('error', 'Tidak ada perubahan. Data yang dikirim sama dengan data sebelumnya.');
         }
 
         DB::transaction(function () use ($client, $validated, $changes, $alasan) {
@@ -114,6 +114,6 @@ class ArchiveRevisionController extends Controller
         });
 
         return redirect()->route('clients.show', $client->id)
-            ->with('success', 'Revisi data arsip berhasil disimpan dan tercatat di log.');
+            ->with('success', 'Perubahan data berhasil disimpan.');
     }
 }
