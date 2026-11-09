@@ -87,6 +87,24 @@ class Client extends Model
             ? 'success'
             : 'pending';
     }
+
+    /**
+     * Return selected PPKS categories, keeping compatibility with single-category records.
+     */
+    public function kategoriPpksList(): array
+    {
+        return self::parseKategoriPpks($this->kategori_ppks);
+    }
+
+    public static function parseKategoriPpks(?string $value): array
+    {
+        if (! filled($value) || trim($value) === '-') {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('trim', explode('|', $value))));
+    }
+
     public function assessment()
     {
         return $this->hasOne(ClientAssessment::class);

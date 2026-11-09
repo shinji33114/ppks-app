@@ -180,7 +180,7 @@ it('shows the progress stepper on the client detail page', function () {
     $this->actingAs(arsipRevUser('kepala-rps'))
         ->get(route('clients.show', $final))
         ->assertOk()
-        ->assertSee('Hasil akhir');
+        ->assertSee('Surat keluar / rujukan');
 });
 
 it('shows the admin role and the Tuban footer on the dashboard', function () {

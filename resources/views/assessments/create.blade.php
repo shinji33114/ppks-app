@@ -1,6 +1,6 @@
 @extends('layouts.spark')
 
-@section('page-title', $assessment ? 'Ubah Hasil Penilaian' : 'Penilaian Kondisi dan Kebutuhan')
+@section('page-title', $isEditingAssessment ? 'Ubah Hasil Penilaian' : 'Penilaian Kondisi dan Kebutuhan')
 @section('page-subtitle', 'Tahap 2 — ' . $client->nama_lengkap)
 
 @section('content')
@@ -11,10 +11,11 @@
 @endphp
 
 <div class="workflow-page assessment-workflow">
+    @include('components.client-workflow-stepper', ['client' => $client, 'currentStep' => 2])
     <section class="workflow-hero workflow-hero-assessment mb-4">
         <div class="workflow-hero-copy">
             <span class="workflow-eyebrow"><i class="bi bi-clipboard2-pulse me-1"></i> Tahap 2 · Penilaian</span>
-            <h2>{{ $assessment ? 'Perbarui hasil penilaian' : 'Nilai kondisi dan kebutuhan' }}</h2>
+            <h2>{{ $isEditingAssessment ? 'Perbarui hasil penilaian' : 'Nilai kondisi dan kebutuhan' }}</h2>
             <p>Catat kondisi penerima layanan, keluarga, dan kebutuhannya untuk menentukan bantuan yang sesuai.</p>
         </div>
         <div class="assessment-client-chip">
@@ -31,9 +32,9 @@
         </div>
     </div>
 
-<form class="assessment-form" method="POST" action="{{ $assessment ? route('assessment.update', $client->id) : route('assessment.store', $client->id) }}">
+<form class="assessment-form" method="POST" action="{{ $isEditingAssessment ? route('assessment.update', $client->id) : route('assessment.store', $client->id) }}">
     @csrf
-    @if ($assessment)
+    @if ($isEditingAssessment)
         @method('PUT')
     @endif
 

@@ -141,41 +141,10 @@
 
           @hasanyrole('admin|super-admin')
           <li class="sidebar-menu-item">
-            <a href="{{ route('clients.create') }}"
-               class="sidebar-menu-link {{ request()->routeIs('clients.create') ? 'active' : '' }}">
-              <i class="bi bi-person-plus"></i>
-              <span>Daftarkan Penerima</span>
-            </a>
-          </li>
-          @endhasanyrole
-
-          @hasanyrole('admin|super-admin')
-          <li class="sidebar-menu-item">
-            <a href="{{ route('assessment.index') }}"
-               class="sidebar-menu-link {{ request()->routeIs('assessment.*') ? 'active' : '' }}">
-              <i class="bi bi-clipboard2-pulse"></i>
-              <span>Penilaian Informasi</span>
-              @php($pendingAssessmentCount = \App\Models\Client::where('status', \App\Models\Client::STATUS_DRAFT)->count())
-              @if ($pendingAssessmentCount > 0)
-                <span class="sidebar-menu-badge">{{ $pendingAssessmentCount }}</span>
-              @endif
-            </a>
-          </li>
-          @endhasanyrole
-
-          @hasanyrole('admin|super-admin')
-          <li class="sidebar-menu-item">
-            <a href="{{ route('penanganan.dashboard') }}"
-               class="sidebar-menu-link {{ request()->routeIs('penanganan.*') ? 'active' : '' }}">
-              <i class="bi bi-journal-text"></i>
-              <span>Pendampingan/Pengajuan</span>
-            </a>
-          </li>
-          <li class="sidebar-menu-item">
-            <a href="{{ route('exit-documents.mine') }}"
-               class="sidebar-menu-link {{ request()->routeIs('exit-documents.mine', 'exit-documents.edit', 'exit-documents.resubmit') ? 'active' : '' }}">
-              <i class="bi bi-file-earmark-check"></i>
-              <span>Surat Keluar dan Rujukan</span>
+            <a href="{{ route('clients.index') }}"
+               class="sidebar-menu-link {{ request()->routeIs('clients.*', 'exit-documents.*') ? 'active' : '' }}">
+              <i class="bi bi-people"></i>
+              <span>Data Penerima Layanan</span>
             </a>
           </li>
           @endhasanyrole
@@ -189,16 +158,6 @@
             </a>
           </li>
           @endrole
-
-           @hasanyrole('admin|super-admin')
-          <li class="sidebar-menu-item">
-            <a href="{{ route('clients.index') }}"
-               class="sidebar-menu-link {{ request()->routeIs('clients.index', 'clients.show') ? 'active' : '' }}">
-              <i class="bi bi-people"></i>
-              <span>Data Penerima Layanan</span>
-            </a>
-          </li>
-          @endhasanyrole
 
         </ul>
       </div>

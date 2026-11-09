@@ -39,9 +39,21 @@
     .client-overview-eyebrow { margin-bottom: .25rem; color: var(--client-green); font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
     .client-overview-title { margin: 0; color: var(--client-ink); font-size: 1.2rem; font-weight: 700; }
     .client-overview-copy { margin: .25rem 0 0; color: #71827b; font-size: .9rem; }
+    .client-overview-actions { position: relative; z-index: 1; display: flex; align-items: center; gap: 1.25rem; }
     .client-overview-total { min-width: 110px; text-align: right; }
-    .client-overview-total strong { display: block; color: var(--client-ink); font-size: 1.8rem; line-height: 1.1; }
+    .client-overview-total strong { display: block; color: var(--client-ink); font-size: 1.8rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
     .client-overview-total span { color: #71827b; font-size: .8rem; }
+    .client-register-button {
+        display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: .55rem;
+        padding: .7rem 1rem; border: 1px solid #126c4f; border-radius: .75rem;
+        background: linear-gradient(135deg, #198754, #126b4b); color: #fff; font-size: .86rem;
+        font-weight: 700; text-decoration: none; box-shadow: 0 6px 14px rgba(19, 121, 91, .18);
+        transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .client-register-button:hover, .client-register-button:focus-visible {
+        transform: translateY(-2px); background: #10583f; color: #fff;
+        box-shadow: 0 9px 18px rgba(19, 121, 91, .24); outline: none;
+    }
     .client-stage-card {
         --stage-color: #13795b; --stage-tint: #e5f4eb;
         position: relative; display: block; height: 100%; overflow: hidden; padding: 1.15rem;
@@ -56,6 +68,7 @@
     }
     .client-stage-card.active { border-color: color-mix(in srgb, var(--stage-color), white 52%); box-shadow: 0 0 0 3px color-mix(in srgb, var(--stage-color), transparent 88%), 0 8px 20px rgba(22, 59, 50, .07); }
     .client-stage-card.active::before { width: 5px; opacity: 1; }
+    .client-stage-card.active .client-stage-footer { font-weight: 750; }
     .client-stage-card[data-stage="assessment"] { --stage-color: #3676c8; --stage-tint: #eaf1fc; }
     .client-stage-card[data-stage="penanganan"] { --stage-color: #bc7b19; --stage-tint: #fff3dd; }
     .client-stage-card[data-stage="final"] { --stage-color: #7654ad; --stage-tint: #f0eafa; }
@@ -92,6 +105,19 @@
     .client-name-alias { margin-top: .1rem; color: #84928c; font-size: .78rem; }
     .client-date { color: #52645c; font-size: .85rem; white-space: nowrap; }
     .client-source { max-width: 240px; color: #687970; font-size: .85rem; }
+    .client-letter-action {
+        display: inline-flex; min-height: 34px; align-items: center; justify-content: center; gap: .4rem;
+        padding: .35rem .65rem; border: 1px solid #cfe5d6; border-radius: .6rem;
+        background: #f0f8f2; color: #176b44; font-size: .76rem; font-weight: 700;
+        text-decoration: none; white-space: nowrap; transition: background .18s ease, border-color .18s ease;
+    }
+    .client-letter-action:hover, .client-letter-action:focus-visible {
+        border-color: #9dcdae; background: #e2f2e7; color: #10583b; outline: none;
+    }
+    .client-no-letter {
+        display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .55rem;
+        border-radius: 2rem; background: #f3f5f4; color: #78877f; font-size: .72rem;
+    }
     .client-empty-state { padding: 3rem 1rem !important; text-align: center; }
     .client-empty-icon { display: grid; width: 52px; height: 52px; margin: 0 auto .75rem; place-items: center; border-radius: 16px; background: #f0f5f2; color: #7b9588; font-size: 1.4rem; }
     .client-pagination { padding: 1rem 1.5rem; border-top: 1px solid #edf0ee; }
@@ -100,6 +126,8 @@
         .client-overview-total { min-width: auto; }
         .client-overview-total strong { font-size: 1.5rem; }
         .client-overview-icon { width: 46px; height: 46px; }
+        .client-overview-actions { align-items: flex-end; flex-direction: column; gap: .7rem; }
+        .client-register-button { min-height: 40px; padding: .6rem .75rem; font-size: .78rem; }
         .client-list-header { align-items: flex-start; padding: 1rem; }
         .client-filter-bar { padding: 1rem; }
         .client-filter-field { flex: 1 1 100%; }
@@ -127,11 +155,11 @@
         .client-table-wrap .table-custom tbody tr.client-data-row td:nth-child(2) { grid-column: 1 / -1; }
         .client-table-wrap .table-custom tbody tr.client-data-row td:nth-child(2)::before { content: none; }
         .client-table-wrap .table-custom tbody tr.client-data-row td:nth-child(2) .client-name-cell { width: 100%; }
-        .client-table-wrap .table-custom tbody tr.client-data-row td:nth-child(6) {
+        .client-table-wrap .table-custom tbody tr.client-data-row td:nth-child(7) {
             grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between;
             padding-top: .5rem; border-top: 1px solid #edf1ee;
         }
-        .client-table-wrap .table-custom tbody tr.client-data-row td:nth-child(6) .table-action-group { margin-left: auto; }
+        .client-table-wrap .table-custom tbody tr.client-data-row td:nth-child(7) .table-action-group { margin-left: auto; }
         .client-table-wrap .table-custom tbody tr.client-empty-row { display: block; }
         .client-table-wrap .table-custom tbody tr.client-empty-row td { display: block; }
     }
@@ -152,9 +180,16 @@
                 <p class="client-overview-copy">Pilih tahap layanan atau cari berdasarkan tanggal masuk.</p>
             </div>
         </div>
-        <div class="client-overview-total">
-            <strong>{{ number_format($clients->total()) }}</strong>
-            <span>{{ $stage || $tanggalMasuk ? 'penerima layanan ditemukan' : 'penerima layanan tercatat' }}</span>
+        <div class="client-overview-actions">
+            <div class="client-overview-total">
+                <strong>{{ number_format($clients->total()) }}</strong>
+                <span>{{ $stage || $tanggalMasuk ? 'penerima layanan ditemukan' : 'penerima layanan tercatat' }}</span>
+            </div>
+            @hasanyrole('admin|super-admin')
+                <a href="{{ route('clients.create') }}" class="client-register-button">
+                    <i class="bi bi-person-plus-fill" aria-hidden="true"></i> Daftarkan Penerima
+                </a>
+            @endhasanyrole
         </div>
     </section>
 
@@ -200,7 +235,10 @@
                     <div class="client-list-caption">Orang yang sudah didaftarkan untuk menerima layanan</div>
                 </div>
             </div>
-            
+            <span class="client-result-count">
+                <i class="bi bi-list-check me-1" aria-hidden="true"></i>
+                {{ number_format($clients->count()) }} dari {{ number_format($clients->total()) }} data
+            </span>
         </div>
 
         @if ($stage || $tanggalMasuk)
@@ -275,6 +313,7 @@
                         <th>Tanggal Masuk</th>
                         <th>Sumber Aduan</th>
                         <th>Status Layanan</th>
+                        <th>Surat</th>
                         <th class="text-end">Pilihan</th>
                     </tr>
                 </thead>
@@ -298,6 +337,19 @@
                             <td data-label="Status">
                                 <span class="badge-table {{ $client->status_badge_class }}">{{ $client->status_label }}</span>
                             </td>
+                            <td data-label="Surat">
+                                @php($exitDocument = $client->exitDocuments->first())
+                                @if ($exitDocument)
+                                    <a href="{{ route('exit-documents.pdf', $exitDocument) }}"
+                                       class="client-letter-action"
+                                       aria-label="Unduh surat {{ $exitDocument->type === 'rujukan' ? 'rujukan' : 'keluar' }} untuk {{ $client->nama_lengkap }}">
+                                        <i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i>
+                                        {{ $exitDocument->type === 'rujukan' ? 'Rujukan' : 'Surat keluar' }}
+                                    </a>
+                                @else
+                                    <span class="client-no-letter"><i class="bi bi-dash-circle" aria-hidden="true"></i> Belum ada surat</span>
+                                @endif
+                            </td>
                             <td data-label="Pilihan" class="text-end">
                                 <div class="table-action-group justify-content-end">
                                     <a href="{{ route('clients.show', $client->id) }}" class="table-btn-action" title="Lihat detail" aria-label="Lihat detail {{ $client->nama_lengkap }}">
@@ -308,7 +360,7 @@
                         </tr>
                     @empty
                         <tr class="client-empty-row">
-                            <td colspan="6" class="client-empty-state">
+                            <td colspan="7" class="client-empty-state">
                                 <div class="client-empty-icon"><i class="bi bi-person-search"></i></div>
                                 <div class="fw-semibold text-dark">Data tidak ditemukan</div>
                                 <div class="text-muted small mt-1">Periksa nama, tanggal masuk, atau tahap layanan.</div>

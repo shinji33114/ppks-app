@@ -5,6 +5,7 @@
 
 @section('content')
 <div class="workflow-page handling-workflow">
+    @include('components.client-workflow-stepper', ['client' => $client, 'currentStep' => 3])
     <section class="workflow-hero workflow-hero-handling mb-4">
         <div class="workflow-hero-copy">
             <span class="workflow-eyebrow"><i class="bi bi-heart-pulse me-1"></i> Tahap 3 · Pendampingan</span>
@@ -56,6 +57,9 @@
                     <i class="bi bi-plus-lg me-1"></i> Simpan catatan
                 </button>
             </form>
+            <a href="#exit-document-form" class="btn-custom btn-custom-secondary mt-3">
+                Lanjut ke surat keluar / rujukan <i class="bi bi-arrow-down ms-1"></i>
+            </a>
         </div>
 
         <div class="card border-light shadow-sm p-4 handling-card">
@@ -88,6 +92,7 @@
 
     <div class="col-lg-5">
         <div class="card border-light shadow-sm p-4 handling-card exit-document-card">
+            <div id="exit-document-form"></div>
             <div class="handling-card-heading">
                 <span class="handling-card-icon exit-document-icon"><i class="bi bi-file-earmark-arrow-up"></i></span>
                 <div><h5>Surat keluar atau rujukan</h5><p>Buat surat jika penerima layanan pulang atau dirujuk.</p></div>

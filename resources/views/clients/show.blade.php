@@ -18,63 +18,14 @@
 @endif
 
 @php
-    $isFinal = in_array($client->status, [\App\Models\Client::STATUS_SELESAI, \App\Models\Client::STATUS_DIRUJUK], true);
     $currentStep = match ($client->status) {
-        \App\Models\Client::STATUS_DRAFT => 0,
-        \App\Models\Client::STATUS_ASSESSMENT => 1,
-        \App\Models\Client::STATUS_PENANGANAN => 2,
-        default => 3,
+        \App\Models\Client::STATUS_DRAFT => 1,
+        \App\Models\Client::STATUS_ASSESSMENT => 2,
+        \App\Models\Client::STATUS_PENANGANAN => 3,
+        default => 4,
     };
-    $steps = [
-        ['Registrasi', 'Tahap 1'],
-        ['Penilaian', 'Tahap 2'],
-        ['Pendampingan', 'Tahap 3'],
-        [$isFinal ? $client->status_label : 'Selesai / Dirujuk', 'Hasil akhir'],
-    ];
 @endphp
-
-@push('styles')
-<style>
-    .stepper-ppks { display: flex; align-items: flex-start; margin-bottom: 1.5rem; }
-    .stepper-ppks .step { flex: 1; text-align: center; position: relative; }
-    .stepper-ppks .step:not(:last-child)::after {
-        content: ''; position: absolute; top: 17px; left: 50%; width: 100%; height: 3px;
-        background: #dee2e6; z-index: 0;
-    }
-    .stepper-ppks .step.done:not(:last-child)::after { background: #198754; }
-    .stepper-ppks .dot {
-        position: relative; z-index: 1; width: 36px; height: 36px; margin: 0 auto 6px;
-        border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        font-weight: 700; background: #dee2e6; color: #6c757d;
-    }
-    .stepper-ppks .step.done .dot { background: #198754; color: #fff; }
-    .stepper-ppks .step.current .dot { background: #0a2e1e; color: #fff; box-shadow: 0 0 0 4px rgba(25, 135, 84, .25); }
-    .stepper-ppks .step-label { font-weight: 600; font-size: .9rem; }
-    .stepper-ppks .step.current .step-label { color: #0a2e1e; }
-    .stepper-ppks .step-sub { font-size: .75rem; color: #6c757d; }
-</style>
-@endpush
-
-<div class="card border-light shadow-sm p-4 mb-4">
-    <div class="stepper-ppks" aria-label="Tahap layanan">
-        @foreach ($steps as $i => $step)
-            @php
-                $state = ($isFinal || $i < $currentStep) ? 'done' : (($i === $currentStep) ? 'current' : 'pending');
-            @endphp
-            <div class="step {{ $state }}">
-                <div class="dot">
-                    @if ($state === 'done')
-                        <i class="bi bi-check-lg"></i>
-                    @else
-                        {{ $i + 1 }}
-                    @endif
-                </div>
-                <div class="step-label">{{ $step[0] }}</div>
-                <div class="step-sub">{{ $step[1] }}</div>
-            </div>
-        @endforeach
-    </div>
-</div>
+@include('components.client-workflow-stepper', ['client' => $client, 'currentStep' => $currentStep])
 
 <div class="row g-4">
 
@@ -166,7 +117,7 @@
 
                 <div class="col-md-6">
                     <div class="text-muted small">Jenis kebutuhan layanan</div>
-                    <div class="fw-medium">{{ $client->kategori_ppks ?: '—' }}</div>
+                    <div class="fw-medium">{{ implode(', ', $client->kategoriPpksList()) ?: '—' }}</div>
                 </div>
 
                 <div class="col-12">

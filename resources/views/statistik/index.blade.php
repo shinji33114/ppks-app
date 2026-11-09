@@ -227,6 +227,31 @@
             font-size: .76rem;
         }
 
+        .statistics-number-item {
+            display: flex;
+            min-height: 3.25rem;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            padding: .65rem .8rem;
+            border: 1px solid var(--stats-border);
+            border-radius: .75rem;
+            background: #fbfdfb;
+        }
+
+        .statistics-number-label {
+            color: var(--stats-ink);
+            font-size: .85rem;
+            font-weight: 600;
+        }
+
+        .statistics-number-value {
+            color: var(--stats-green);
+            font-size: 1.15rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+        }
+
         @media (max-width: 575.98px) {
             .statistics-hero {
                 align-items: stretch;
@@ -309,9 +334,18 @@
         <div class="statistics-section">
             <div class="statistics-section-heading">
                 <span class="statistics-section-icon" aria-hidden="true"><i class="bi bi-bar-chart-line"></i></span>
-                <div><h3>Jumlah Penerima Layanan per Tahap</h3><p>Jumlah orang pada setiap tahap layanan</p></div>
+                <div><h3>Jumlah Penerima Layanan per Tahap</h3><p>Jumlah penerima layanan pada setiap tahap</p></div>
             </div>
-            <div id="chart-status"></div>
+            <div class="row row-cols-2 row-cols-lg-3 g-2">
+                @foreach ($statusBreakdown as $item)
+                    <div class="col">
+                        <div class="statistics-number-item">
+                            <span class="statistics-number-label">{{ $item['label'] }}</span>
+                            <span class="statistics-number-value">{{ number_format($item['total'], 0, ',', '.') }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
         </div>
     </div>
     <div class="col-lg-6">
@@ -332,7 +366,16 @@
                 <span class="statistics-section-icon" aria-hidden="true"><i class="bi bi-gender-ambiguous"></i></span>
                 <div><h3>Jenis Kelamin</h3><p>Jumlah penerima layanan berdasarkan jenis kelamin</p></div>
             </div>
-            <div id="chart-gender"></div>
+            <div class="row row-cols-2 g-2">
+                @foreach ($genderBreakdown as $label => $total)
+                    <div class="col">
+                        <div class="statistics-number-item">
+                            <span class="statistics-number-label">{{ $label }}</span>
+                            <span class="statistics-number-value">{{ number_format($total, 0, ',', '.') }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
             <p class="text-muted small mt-2 mb-0">*Dihitung dari penerima layanan yang sudah dinilai</p>
         </div>
     </div>
@@ -342,7 +385,16 @@
                 <span class="statistics-section-icon" aria-hidden="true"><i class="bi bi-person-badge"></i></span>
                 <div><h3>Kelompok Usia</h3><p>Jumlah penerima layanan berdasarkan usia</p></div>
             </div>
-            <div id="chart-usia"></div>
+            <div class="row row-cols-2 row-cols-lg-3 g-2">
+                @foreach ($ageBuckets as $label => $total)
+                    <div class="col">
+                        <div class="statistics-number-item">
+                            <span class="statistics-number-label">{{ $label }}</span>
+                            <span class="statistics-number-value">{{ number_format($total, 0, ',', '.') }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
             <p class="text-muted small mt-2 mb-0">*Dihitung dari penerima layanan yang sudah dinilai</p>
         </div>
     </div>
@@ -358,7 +410,16 @@
             @if ($kategoriBreakdown->isEmpty())
                 <p class="text-muted">Belum ada data kategori.</p>
             @else
-                <div id="chart-kategori"></div>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2">
+                    @foreach ($kategoriBreakdown as $item)
+                        <div class="col">
+                            <div class="statistics-number-item">
+                                <span class="statistics-number-label">{{ $item->kategori_ppks }}</span>
+                                <span class="statistics-number-value">{{ number_format($item->total, 0, ',', '.') }}</span>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             @endif
         </div>
     </div>
@@ -374,7 +435,16 @@
                 @if ($sumberAduanBreakdown->isEmpty())
                     <p class="text-muted mb-0">Belum ada data sumber aduan.</p>
                 @else
-                    <div id="chart-sumber-aduan"></div>
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2">
+                        @foreach ($sumberAduanBreakdown as $item)
+                            <div class="col">
+                                <div class="statistics-number-item">
+                                    <span class="statistics-number-label">{{ $item->sumber_aduan }}</span>
+                                    <span class="statistics-number-value">{{ number_format($item->total, 0, ',', '.') }}</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
                 @endif
             </div>
         </div>
@@ -395,50 +465,9 @@ document.addEventListener('DOMContentLoaded', function () {
             parentHeightOffset: 0,
             animations: { speed: 450 },
         },
-        dataLabels: { style: { fontSize: '11px', fontWeight: 600 } },
         grid: { borderColor: chartGrid, strokeDashArray: 4 },
-        legend: {
-            position: 'bottom',
-            fontSize: '12px',
-            markers: { offsetX: -3 },
-            itemMargin: { horizontal: 10, vertical: 4 },
-        },
         tooltip: { theme: 'light' },
     };
-
-    // Breakdown Status (bar chart)
-    new ApexCharts(document.querySelector("#chart-status"), {
-        ...chartBase,
-        chart: { ...chartBase.chart, type: 'bar', height: 270, toolbar: { show: false } },
-        series: [{ name: 'Jumlah Penerima Layanan', data: @json(array_column($statusBreakdown, 'total')) }],
-        xaxis: {
-            categories: @json(array_column($statusBreakdown, 'label')),
-            labels: { style: { colors: chartText, fontSize: '12px' } },
-            axisBorder: { show: false },
-            axisTicks: { show: false },
-        },
-        yaxis: { labels: { style: { colors: chartText } } },
-        colors: ['#64748b', '#3974d5', '#198754', '#29a875', '#8870cf'],
-        plotOptions: {
-            bar: {
-                horizontal: false,
-                borderRadius: 6,
-                columnWidth: '58%',
-                distributed: true,
-                dataLabels: { position: 'top' },
-            },
-        },
-        dataLabels: {
-            ...chartBase.dataLabels,
-            enabled: true,
-            offsetY: -8,
-            style: { ...chartBase.dataLabels.style, colors: [chartText] },
-            formatter: (value) => Number(value).toLocaleString('id-ID'),
-        },
-        tooltip: { y: { formatter: (value) => `${Number(value).toLocaleString('id-ID')} orang` } },
-        grid: { ...chartBase.grid, padding: { left: 8, right: 24 } },
-        legend: { show: false },
-    }).render();
 
     // Tren bulanan (line chart)
     new ApexCharts(document.querySelector("#chart-tren"), {
@@ -459,171 +488,6 @@ document.addEventListener('DOMContentLoaded', function () {
         dataLabels: { enabled: false },
         grid: { ...chartBase.grid, padding: { left: 8, right: 8 } },
     }).render();
-
-    // Jenis kelamin (bar chart)
-    new ApexCharts(document.querySelector("#chart-gender"), {
-        ...chartBase,
-        chart: { ...chartBase.chart, type: 'bar', height: 250, toolbar: { show: false } },
-        series: [{ name: 'Jumlah Penerima Layanan', data: @json(array_values($genderBreakdown)) }],
-        xaxis: {
-            categories: @json(array_keys($genderBreakdown)),
-            labels: { style: { colors: chartText } },
-            axisBorder: { show: false },
-            axisTicks: { show: false },
-        },
-        yaxis: {
-            min: 0,
-            forceNiceScale: true,
-            labels: { style: { colors: chartText } },
-        },
-        plotOptions: {
-            bar: {
-                horizontal: false,
-                borderRadius: 5,
-                columnWidth: '48%',
-                distributed: true,
-                dataLabels: { position: 'top' },
-            },
-        },
-        colors: ['#3974d5', '#e36b9a'],
-        dataLabels: {
-            ...chartBase.dataLabels,
-            enabled: true,
-            offsetY: -8,
-            style: { ...chartBase.dataLabels.style, colors: [chartText] },
-            formatter: (value) => Number(value).toLocaleString('id-ID'),
-        },
-        grid: { ...chartBase.grid, padding: { right: 16 } },
-        legend: { show: false },
-        tooltip: { y: { formatter: (value) => `${Number(value).toLocaleString('id-ID')} orang` } },
-    }).render();
-
-    // Kelompok usia (bar chart)
-    new ApexCharts(document.querySelector("#chart-usia"), {
-        ...chartBase,
-        chart: { ...chartBase.chart, type: 'bar', height: 250, toolbar: { show: false } },
-        series: [{ name: 'Jumlah Penerima Layanan', data: @json(array_values($ageBuckets)) }],
-        xaxis: {
-            categories: @json(array_keys($ageBuckets)),
-            labels: { style: { colors: chartText } },
-            axisBorder: { show: false },
-            axisTicks: { show: false },
-        },
-        yaxis: {
-            min: 0,
-            forceNiceScale: true,
-            labels: { style: { colors: chartText } },
-        },
-        plotOptions: {
-            bar: {
-                horizontal: false,
-                borderRadius: 5,
-                columnWidth: '48%',
-                distributed: true,
-                dataLabels: { position: 'top' },
-            },
-        },
-        colors: ['#f1ae37', '#29a875', '#8870cf'],
-        dataLabels: {
-            ...chartBase.dataLabels,
-            enabled: true,
-            offsetY: -8,
-            style: { ...chartBase.dataLabels.style, colors: [chartText] },
-            formatter: (value) => Number(value).toLocaleString('id-ID'),
-        },
-        grid: { ...chartBase.grid, padding: { top: 16, right: 16, bottom: 24 } },
-        legend: { show: false },
-        tooltip: { y: { formatter: (value) => `${Number(value).toLocaleString('id-ID')} orang` } },
-    }).render();
-
-    @if ($kategoriBreakdown->isNotEmpty())
-    // Kategori PPKS (bar vertikal)
-    new ApexCharts(document.querySelector("#chart-kategori"), {
-        ...chartBase,
-        chart: { ...chartBase.chart, type: 'bar', height: 320, toolbar: { show: false } },
-        series: [{ name: 'Jumlah Penerima Layanan', data: @json($kategoriBreakdown->pluck('total')) }],
-        xaxis: {
-            categories: @json($kategoriBreakdown->pluck('kategori_ppks')),
-            labels: {
-                rotate: -45,
-                rotateAlways: true,
-                trim: false,
-                style: { colors: chartText, fontSize: '10px' },
-            },
-            axisBorder: { show: false },
-            axisTicks: { show: false },
-        },
-        yaxis: {
-            min: 0,
-            forceNiceScale: true,
-            labels: { style: { colors: chartText } },
-        },
-        plotOptions: {
-            bar: {
-                horizontal: false,
-                borderRadius: 5,
-                columnWidth: '56%',
-                distributed: true,
-                dataLabels: { position: 'top' },
-            },
-        },
-        colors: ['#df8c35'],
-        dataLabels: {
-            ...chartBase.dataLabels,
-            enabled: true,
-            offsetY: -8,
-            style: { ...chartBase.dataLabels.style, colors: [chartText] },
-            formatter: (value) => Number(value).toLocaleString('id-ID'),
-        },
-        tooltip: { y: { formatter: (value) => `${Number(value).toLocaleString('id-ID')} orang` } },
-        grid: { ...chartBase.grid, padding: { left: 8, right: 16, bottom: 24 } },
-        legend: { show: false },
-    }).render();
-    @endif
-
-    @if ($sumberAduanBreakdown->isNotEmpty())
-    // Sumber aduan (bar horizontal)
-    new ApexCharts(document.querySelector("#chart-sumber-aduan"), {
-        ...chartBase,
-        chart: {
-            ...chartBase.chart,
-            type: 'bar',
-            height: Math.max(220, {{ $sumberAduanBreakdown->count() }} * 52),
-            toolbar: { show: false },
-        },
-        series: [{ name: 'Jumlah Penerima Layanan', data: @json($sumberAduanBreakdown->pluck('total')) }],
-        xaxis: {
-            categories: @json($sumberAduanBreakdown->pluck('sumber_aduan')),
-            min: 0,
-            forceNiceScale: true,
-            labels: { style: { colors: chartText } },
-            axisBorder: { show: false },
-            axisTicks: { show: false },
-        },
-        yaxis: {
-            labels: { style: { colors: chartText, fontSize: '12px' } },
-        },
-        plotOptions: {
-            bar: {
-                horizontal: true,
-                borderRadius: 5,
-                barHeight: '58%',
-                dataLabels: { position: 'right' },
-            },
-        },
-        colors: ['#198754'],
-        dataLabels: {
-            ...chartBase.dataLabels,
-            enabled: true,
-            offsetX: 8,
-            style: { ...chartBase.dataLabels.style, colors: [chartText] },
-            formatter: (value) => Number(value).toLocaleString('id-ID'),
-        },
-        tooltip: { y: { formatter: (value) => `${Number(value).toLocaleString('id-ID')} orang` } },
-        grid: { ...chartBase.grid, padding: { left: 8, right: 24 } },
-        legend: { show: false },
-    }).render();
-    @endif
 
 });
 </script>

@@ -54,12 +54,12 @@ it('stores the expanded stage one client data and uploads', function () {
         'problem_awal' => 'Membutuhkan perlindungan sementara.',
         'nama_lengkap' => '-',
         'nama_alias' => 'Budi',
-        'kategori_ppks' => 'Anak Jalanan',
+        'kategori_ppks' => ['Anak Jalanan'],
         'foto_klien' => UploadedFile::fake()->create('client.jpg', 100, 'image/jpeg'),
         'data_dukung' => UploadedFile::fake()->create('pengantar.pdf', 100, 'application/pdf'),
     ]);
 
-    $response->assertRedirect(route('dashboard'));
+    $response->assertRedirect(route('assessment.create', \App\Models\Client::firstOrFail()));
 
     $client = \App\Models\Client::firstOrFail();
 
@@ -83,9 +83,64 @@ it('menolak kategori_ppks di luar daftar pilihan', function () {
         'tanggal_masuk' => '2026-09-24',
         'sumber_aduan' => 'Laporan warga',
         'tkp_kronologi' => 'Ditemukan di area publik.',
-        'kategori_ppks' => 'Kategori Ngasal',
+        'kategori_ppks' => ['Kategori Ngasal'],
+        'foto_klien' => UploadedFile::fake()->create('client.jpg', 100, 'image/jpeg'),
+    ])->assertSessionHasErrors('kategori_ppks.0');
+});
+
+it('allows selecting and saving multiple PPKS service categories', function () {
+    Storage::fake('local');
+    $user = User::factory()->create();
+    $user->assignRole('admin');
+
+    $this->actingAs($user)
+        ->get(route('clients.create'))
+        ->assertOk()
+        ->assertSee('Pilih satu atau beberapa kategori yang sesuai.')
+        ->assertSee('name="kategori_ppks[]"', false);
+
+    $this->actingAs($user)->post(route('clients.store'), [
+        'tanggal_masuk' => '2026-09-24',
+        'sumber_aduan' => 'Laporan warga',
+        'tkp_kronologi' => 'Ditemukan di area publik.',
+        'nama_lengkap' => 'Klien Multi Kategori',
+        'nama_alias' => '-',
+        'kondisi_fisik' => '-',
+        'problem_awal' => 'Membutuhkan beberapa jenis bantuan.',
+        'kategori_ppks' => ['Anak Terlantar', 'Korban Kekerasan'],
+        'tanpa_data_dukung' => '1',
+        'foto_klien' => UploadedFile::fake()->create('client.jpg', 100, 'image/jpeg'),
+    ])->assertSessionHasNoErrors();
+
+    $client = \App\Models\Client::firstOrFail();
+    expect($client->kategori_ppks)->toBe('Anak Terlantar | Korban Kekerasan')
+        ->and($client->kategoriPpksList())->toBe(['Anak Terlantar', 'Korban Kekerasan']);
+
+    $this->actingAs($user)
+        ->get(route('clients.show', $client))
+        ->assertOk()
+        ->assertSee('Anak Terlantar, Korban Kekerasan');
+});
+
+it('does not allow choosing unknown together with a known PPKS category', function () {
+    Storage::fake('local');
+    $user = User::factory()->create();
+    $user->assignRole('admin');
+
+    $this->actingAs($user)->post(route('clients.store'), [
+        'tanggal_masuk' => '2026-09-24',
+        'sumber_aduan' => 'Laporan warga',
+        'tkp_kronologi' => 'Ditemukan di area publik.',
+        'nama_lengkap' => 'Klien Uji',
+        'nama_alias' => '-',
+        'kondisi_fisik' => '-',
+        'problem_awal' => '-',
+        'kategori_ppks' => ['-', 'Anak Terlantar'],
+        'tanpa_data_dukung' => '1',
         'foto_klien' => UploadedFile::fake()->create('client.jpg', 100, 'image/jpeg'),
     ])->assertSessionHasErrors('kategori_ppks');
+
+    expect(\App\Models\Client::count())->toBe(0);
 });
 
 it('menolak registrasi bila ada field yang dikosongkan', function () {
@@ -118,10 +173,10 @@ it('menerima tanda "-" untuk data yang tidak ada', function () {
         'nama_alias' => '-',
         'kondisi_fisik' => '-',
         'problem_awal' => '-',
-        'kategori_ppks' => '-',
+        'kategori_ppks' => ['-'],
         'tanpa_data_dukung' => '1',
         'foto_klien' => UploadedFile::fake()->create('client.jpg', 100, 'image/jpeg'),
-    ])->assertSessionHasNoErrors()->assertRedirect(route('dashboard'));
+    ])->assertSessionHasNoErrors()->assertRedirect(route('assessment.create', \App\Models\Client::firstOrFail()));
 
     $client = \App\Models\Client::firstOrFail();
 
@@ -131,6 +186,79 @@ it('menerima tanda "-" untuk data yang tidak ada', function () {
         ->and($client->problem_awal)->toBe('-')
         ->and($client->kategori_ppks)->toBeNull()
         ->and($client->data_dukung)->toBeNull();
+});
+
+it('starts a new service episode from an existing NIK and copies the client profile', function () {
+    $user = User::factory()->create();
+    $user->assignRole('admin');
+
+    $previousClient = \App\Models\Client::create([
+        'tanggal_masuk' => '2026-09-24',
+        'sumber_aduan' => 'Laporan warga',
+        'tkp_kronologi' => 'Kasus sebelumnya.',
+        'nama_lengkap' => 'Budi Santoso',
+        'nama_alias' => 'Budi',
+        'kondisi_fisik' => 'Sehat',
+        'problem_awal' => 'Butuh pendampingan.',
+        'kategori_ppks' => 'Anak Jalanan',
+        'foto_klien' => 'client-photos/budi.jpg',
+        'data_dukung' => 'client-documents/budi.pdf',
+        'status' => \App\Models\Client::STATUS_SELESAI,
+        'is_archived' => true,
+    ]);
+    $previousAssessment = \App\Models\ClientAssessment::create(array_merge(
+        payloadAssessmentLengkap(['nik' => '3578012345678901', 'alamat_domisili' => 'Alamat lama']),
+        ['client_id' => $previousClient->id],
+    ));
+
+    $this->actingAs($user)->get(route('clients.create'))
+        ->assertOk()
+        ->assertSee('Budi Santoso')
+        ->assertSee($previousAssessment->nik);
+
+    $response = $this->actingAs($user)->post(route('clients.reuse'), [
+        'previous_client_id' => $previousClient->id,
+        'tanggal_masuk' => '2026-10-25',
+        'sumber_aduan' => 'Keluarga/kerabat',
+        'tkp_kronologi' => 'Membutuhkan layanan lanjutan.',
+    ]);
+
+    $newClient = \App\Models\Client::where('id', '!=', $previousClient->id)->firstOrFail();
+    $response->assertRedirect(route('assessment.create', $newClient));
+
+    expect($newClient->status)->toBe(\App\Models\Client::STATUS_DRAFT)
+        ->and($newClient->tanggal_masuk->toDateString())->toBe('2026-10-25')
+        ->and($newClient->tkp_kronologi)->toBe('Membutuhkan layanan lanjutan.')
+        ->and($newClient->nama_lengkap)->toBe('Budi Santoso')
+        ->and($newClient->foto_klien)->toBe('client-photos/budi.jpg')
+        ->and($newClient->assessment->nik)->toBe($previousAssessment->nik)
+        ->and($newClient->assessment->alamat_domisili)->toBe('Alamat lama')
+        ->and(\App\Models\ClientAssessment::where('nik', $previousAssessment->nik)->count())->toBe(2);
+
+    $this->actingAs($user)
+        ->get(route('assessment.create', $newClient))
+        ->assertOk()
+        ->assertSee('Alamat lama')
+        ->assertSee(route('assessment.store', $newClient));
+});
+
+it('shows an error when a selected client has no service history with an NIK', function () {
+    $user = User::factory()->create();
+    $user->assignRole('admin');
+
+    $this->actingAs($user)->post(route('clients.reuse'), [
+        'previous_client_id' => $previousClient = \App\Models\Client::create([
+            'tanggal_masuk' => '2026-09-24',
+            'sumber_aduan' => 'Laporan warga',
+            'tkp_kronologi' => 'Klien tanpa NIK.',
+            'nama_lengkap' => 'Klien Tanpa NIK',
+        ])->id,
+        'tanggal_masuk' => '2026-10-25',
+        'sumber_aduan' => 'Keluarga/kerabat',
+        'tkp_kronologi' => 'Kebutuhan layanan.',
+    ])->assertSessionHasErrors('previous_client_id');
+
+    expect(\App\Models\Client::count())->toBe(1);
 });
 
 it('edit Tahap 1: field tidak boleh dikosongkan, "-" diterima, file lama tetap', function () {
@@ -159,7 +287,7 @@ it('edit Tahap 1: field tidak boleh dikosongkan, "-" diterima, file lama tetap',
         'nama_alias' => '',
         'kondisi_fisik' => '-',
         'problem_awal' => '-',
-        'kategori_ppks' => '-',
+        'kategori_ppks' => ['-'],
         'tanpa_data_dukung' => '1',
     ];
 

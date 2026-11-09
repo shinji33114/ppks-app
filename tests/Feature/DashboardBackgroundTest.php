@@ -12,7 +12,13 @@ it('memakai foto Alun-Alun sebagai latar halaman setelah login', function () {
         ->get(route('dashboard'))
         ->assertOk()
         ->assertSee('class="bg-foto"', false)
-        ->assertSee('images/dashboard-bg.jpg', false);
+        ->assertSee('images/dashboard-bg.jpg', false)
+        ->assertDontSee('Penilaian Informasi')
+        ->assertDontSee('Pendampingan/Pengajuan')
+        ->assertSee('Data Penerima Layanan')
+        ->assertDontSee('Daftarkan Penerima')
+        ->assertDontSee('Surat Keluar dan Rujukan')
+        ->assertDontSee('sidebar-client-menu');
 
     expect(file_exists(public_path('images/dashboard-bg.jpg')))->toBeTrue();
 });

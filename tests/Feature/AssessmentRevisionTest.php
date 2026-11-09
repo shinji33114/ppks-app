@@ -90,7 +90,7 @@ it('B3: simpulan awal tetap wajib', function () {
         ->and($client->refresh()->status)->toBe(Client::STATUS_DRAFT);
 });
 
-it('rejects an NIK already used by another assessment but allows keeping its own NIK on edit', function () {
+it('allows an existing NIK to be used in a separate service episode', function () {
     $peksos = revUser('peksos');
     $firstClient = revClient();
     $secondClient = revClient(['nama_lengkap' => 'Klien Kedua']);
@@ -102,14 +102,15 @@ it('rejects an NIK already used by another assessment but allows keeping its own
 
     $this->actingAs($peksos)
         ->post(route('assessment.store', $secondClient), payloadAssessmentLengkap(['simpulan_awal' => 'Simpulan kedua.', 'nik' => $nik]))
-        ->assertSessionHasErrors('nik');
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('penanganan.index', $secondClient));
 
     $this->actingAs($peksos)
         ->put(route('assessment.update', $firstClient), payloadAssessmentLengkap(['simpulan_awal' => 'Simpulan diperbarui.', 'nik' => $nik]))
         ->assertSessionHasNoErrors();
 
-    expect(ClientAssessment::count())->toBe(1)
-        ->and($secondClient->refresh()->status)->toBe(Client::STATUS_DRAFT);
+    expect(ClientAssessment::count())->toBe(2)
+        ->and($secondClient->refresh()->status)->toBe(Client::STATUS_ASSESSMENT);
 });
 
 it('mengizinkan NIK "-" pada banyak klien karena disimpan NULL', function () {

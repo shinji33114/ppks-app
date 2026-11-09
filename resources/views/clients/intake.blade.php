@@ -4,8 +4,60 @@
 @section('page-subtitle', 'Tahap 1 — Pendaftaran awal')
 
 @section('content')
+@include('components.client-workflow-stepper', ['client' => null, 'currentStep' => 1])
+
 <div class="row g-4">
     <div class="col-lg-8">
+        <div class="card border-light shadow-sm p-4 mb-4">
+            <h5 class="card-title mb-2">Klien lama menerima layanan kembali</h5>
+            <p class="text-muted small">Pilih data klien yang sudah tersimpan. Data identitas dan asesmen sebelumnya akan disalin sebagai isian awal, dan foto serta berkas lama akan tetap digunakan.</p>
+            <form method="POST" action="{{ route('clients.reuse') }}">
+                @csrf
+                <div class="mb-3">
+                    <label for="previous_client_id" class="form-label-custom">Data klien lama</label>
+                    <select name="previous_client_id" id="previous_client_id"
+                            class="form-control-custom @error('previous_client_id') is-invalid-custom @enderror" required>
+                        <option value="">- Pilih klien dari data tersimpan -</option>
+                        @foreach ($previousClients as $previousClient)
+                            <option value="{{ $previousClient->id }}" @selected((string) old('previous_client_id') === (string) $previousClient->id)>
+                                {{ $previousClient->nama_lengkap }} — NIK {{ $previousClient->assessment->nik }}
+                                (layanan {{ $previousClient->tanggal_masuk->translatedFormat('d M Y') }})
+                            </option>
+                        @endforeach
+                    </select>
+                    @if ($previousClients->isEmpty())
+                        <div class="text-muted small mt-1">Belum ada data klien dengan NIK yang tersimpan.</div>
+                    @endif
+                    @error('previous_client_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                </div>
+                <div class="mb-3">
+                    <label for="reuse_tanggal_masuk" class="form-label-custom">Tanggal masuk layanan baru</label>
+                    <input type="date" name="tanggal_masuk" id="reuse_tanggal_masuk"
+                           value="{{ old('tanggal_masuk', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}"
+                           class="form-control-custom @error('tanggal_masuk') is-invalid-custom @enderror" required>
+                    @error('tanggal_masuk') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                </div>
+                <div class="mb-3">
+                    <label for="reuse_sumber_aduan" class="form-label-custom">Sumber aduan layanan baru</label>
+                    <select name="sumber_aduan" id="reuse_sumber_aduan" class="form-control-custom @error('sumber_aduan') is-invalid-custom @enderror" required>
+                        <option value="">- Pilih sumber aduan -</option>
+                        @foreach (\App\Models\Client::SUMBER_ADUAN as $sumber)
+                            <option value="{{ $sumber }}" @selected(old('sumber_aduan') === $sumber)>{{ $sumber }}</option>
+                        @endforeach
+                    </select>
+                    @error('sumber_aduan') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                </div>
+                <div class="mb-3">
+                    <label for="reuse_tkp_kronologi" class="form-label-custom">Kronologi/kebutuhan layanan baru</label>
+                    <textarea name="tkp_kronologi" id="reuse_tkp_kronologi" rows="3" class="form-control-custom @error('tkp_kronologi') is-invalid-custom @enderror" required>{{ old('tkp_kronologi') }}</textarea>
+                    @error('tkp_kronologi') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                </div>
+                <button type="submit" class="btn-custom btn-custom-primary">
+                    <i class="bi bi-arrow-repeat me-1"></i> Gunakan data lama & lanjutkan
+                </button>
+            </form>
+        </div>
+
         <div class="card border-light shadow-sm p-4">
 
             <h5 class="card-title mb-3">Formulir Pendaftaran (Tahap 1)</h5>
@@ -86,16 +138,7 @@
     </div>
 </div>
                 
-               <div class="mb-3">
-    <label for="kategori_ppks" class="form-label-custom">Jenis kebutuhan layanan (PPKS)</label>
-    <select name="kategori_ppks" id="kategori_ppks" class="form-control-custom" required>
-        <option value="">- Pilih -</option>
-        <option value="-" @selected(old('kategori_ppks') === '-')>- Tidak diketahui -</option>
-        @foreach (\App\Models\Client::KATEGORI_PPKS as $kategori)
-            <option value="{{ $kategori }}" @selected(old('kategori_ppks') == $kategori)>{{ $kategori }}</option>
-        @endforeach
-    </select>
-</div>
+               @include('components.category-selector')
 
 <div class="mb-3">
     <label for="problem_awal" class="form-label-custom">Masalah atau kebutuhan awal</label>

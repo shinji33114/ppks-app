@@ -50,7 +50,7 @@ it('shows a clear Excel export action on the statistics dashboard', function () 
         ->assertSee('berkas Excel');
 });
 
-it('shows source of complaint statistics as a bar chart', function () {
+it('shows source of complaint statistics as category names with numeric totals', function () {
     $admin = User::factory()->create();
     $admin->assignRole('admin');
 
@@ -66,9 +66,9 @@ it('shows source of complaint statistics as a bar chart', function () {
     $this->actingAs($admin)
         ->get(route('dashboard'))
         ->assertOk()
-        ->assertSee('chart-sumber-aduan')
-        ->assertSee('horizontal: true')
-        ->assertSee('Ormas');
+        ->assertSee('Ormas')
+        ->assertSee('statistics-number-value')
+        ->assertDontSee('chart-sumber-aduan');
 });
 
 it('redirects guests to the login page', function () {
@@ -98,6 +98,32 @@ it('writes the same numbers that the dashboard shows', function () {
         ->and($cells['Lansia Terlantar'])->toEqual(2)
         ->and($cells['Anak Jalanan'])->toEqual(1)
         ->and($cells['Draft'])->toEqual(3);
+});
+
+it('counts every selected PPKS category separately in the statistics export', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    foreach ([
+        ['Lansia Terlantar', 'Anak Terlantar'],
+        ['Lansia Terlantar'],
+    ] as $i => $categories) {
+        Client::create([
+            'tanggal_masuk' => now()->toDateString(),
+            'sumber_aduan' => 'Laporan warga',
+            'tkp_kronologi' => 'Ditemukan di area publik.',
+            'nama_lengkap' => "Klien multi kategori {$i}",
+            'status' => Client::STATUS_DRAFT,
+            'kategori_ppks' => implode(' | ', $categories),
+        ]);
+    }
+
+    $sheet = IOFactory::load(unduhExcel($this, $admin))->getActiveSheet();
+    $cells = collect($sheet->toArray())->mapWithKeys(fn ($row) => [$row[0] => $row[1]]);
+
+    expect($cells['Lansia Terlantar'])->toEqual(2)
+        ->and($cells['Anak Terlantar'])->toEqual(1)
+        ->and($cells['Klien Belum Dikategorikan'])->toEqual(0);
 });
 
 it('does not let user-entered text become an Excel formula', function () {

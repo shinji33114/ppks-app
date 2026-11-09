@@ -3,18 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Models\ClientAssessment;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Controllers\Concerns\TerimaStrip;
 
 class ClientController extends Controller
 {
-    use TerimaStrip;
-
-    /** Field Tahap 1 yang bertipe pilihan: jika diisi "-" disimpan sebagai NULL. */
-    private const FIELD_STRIP = ['kategori_ppks'];
-
     /**
      * Aturan Tahap 1: semua field wajib diisi (isi "-" jika datanya tidak ada).
      * Foto dan data dukung berupa file, jadi tidak bisa diisi "-":
@@ -34,7 +30,17 @@ class ClientController extends Controller
             'nama_alias' => ['required', 'string', 'max:255'],
             'kondisi_fisik' => ['required', 'string'],
             'problem_awal' => ['required', 'string'],
-            'kategori_ppks' => ['required', \Illuminate\Validation\Rule::in(Client::KATEGORI_PPKS)],
+            'kategori_ppks' => [
+                'required',
+                'array',
+                'min:1',
+                function ($attribute, $value, $fail) {
+                    if (in_array('-', $value, true) && count($value) > 1) {
+                        $fail('Pilih kategori yang diketahui atau "Tidak diketahui", jangan keduanya.');
+                    }
+                },
+            ],
+            'kategori_ppks.*' => ['required', 'string', 'distinct', Rule::in([...Client::KATEGORI_PPKS, '-'])],
             'foto_klien' => [$adaFoto ? 'nullable' : 'required', 'image', 'max:5120'],
             'data_dukung' => [
                 $adaDokumen ? 'nullable' : 'required_unless:tanpa_data_dukung,1',
@@ -72,10 +78,12 @@ class ClientController extends Controller
     /** Validasi + normalisasi "-" untuk store() dan update(). */
     private function validasiTahapSatu(Request $request, ?Client $client): array
     {
-        $rules = $this->izinkanStrip($request, $this->aturanTahapSatu($client), self::FIELD_STRIP);
+        $rules = $this->aturanTahapSatu($client);
 
         $validated = $request->validate($rules, $this->pesanTahapSatu(), $this->labelTahapSatu());
-        $validated = $this->terapkanStrip($request, $validated, self::FIELD_STRIP);
+        $validated['kategori_ppks'] = $validated['kategori_ppks'] === ['-']
+            ? null
+            : implode(' | ', $validated['kategori_ppks']);
 
         // Nama "-" memakai penanda yang sudah dipakai aplikasi untuk klien tanpa identitas.
         if (trim($validated['nama_lengkap']) === '-') {
@@ -116,6 +124,10 @@ class ClientController extends Controller
     ];
 
     $clients = Client::query()
+        ->with(['exitDocuments' => fn ($query) => $query
+            ->whereIn('status', ['selesai', 'disetujui'])
+            ->latest('id')
+            ->limit(1)])
         ->when($stage, function ($query, $stage) use ($stageStatuses) {
             $query->whereIn('status', $stageStatuses[$stage]);
         })
@@ -140,7 +152,12 @@ class ClientController extends Controller
      */
     public function create()
     {
-        return view('clients.intake');
+        $previousClients = Client::with('assessment')
+            ->whereHas('assessment', fn ($query) => $query->whereNotNull('nik')->where('nik', '!=', ''))
+            ->latest('id')
+            ->get();
+
+        return view('clients.intake', compact('previousClients'));
     }
 
     public function edit(Client $client)
@@ -170,8 +187,67 @@ class ClientController extends Controller
 $admins = \App\Models\User::role(['admin', 'super-admin'])->get();
 \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\KlienBaruMasuk($client));
 
-return redirect()->route('dashboard')
-                  ->with('success', 'Penerima layanan berhasil didaftarkan.');
+return redirect()->route('assessment.create', $client)
+          ->with('success', 'Penerima layanan berhasil didaftarkan. Lanjutkan ke tahap penilaian.');
+    }
+
+    /**
+     * Membuka episode layanan baru dengan memakai kembali data klien yang dipilih dari riwayat.
+     */
+    public function reuse(Request $request)
+    {
+$validated = $request->validate([
+'previous_client_id' => [
+    'required',
+    Rule::exists('clients', 'id')->where(function ($query) {
+        $query->whereExists(function ($subquery) {
+            $subquery->selectRaw('1')
+                ->from('client_assessments')
+                ->whereColumn('client_assessments.client_id', 'clients.id')
+                ->whereNotNull('client_assessments.nik')
+                ->where('client_assessments.nik', '!=', '');
+        });
+    }),
+],
+    'tanggal_masuk' => ['required', 'date', 'before_or_equal:today'],
+    'sumber_aduan' => ['required', Rule::in(Client::SUMBER_ADUAN)],
+    'tkp_kronologi' => ['required', 'string'],
+], [
+    'previous_client_id.exists' => 'Data klien yang dipilih tidak memiliki riwayat NIK. Pilih data klien lain.',
+]);
+
+$previousClient = Client::with('assessment')->findOrFail($validated['previous_client_id']);
+$assessment = $previousClient->assessment;
+
+$client = DB::transaction(function () use ($validated, $previousClient, $assessment) {
+    $client = Client::create([
+        'tanggal_masuk' => $validated['tanggal_masuk'],
+        'sumber_aduan' => $validated['sumber_aduan'],
+        'tkp_kronologi' => $validated['tkp_kronologi'],
+        'nama_lengkap' => $previousClient->nama_lengkap,
+        'nama_alias' => $previousClient->nama_alias,
+        'kondisi_fisik' => $previousClient->kondisi_fisik,
+        'problem_awal' => $previousClient->problem_awal,
+        'kategori_ppks' => $previousClient->kategori_ppks,
+        'foto_klien' => $previousClient->foto_klien,
+        'data_dukung' => $previousClient->data_dukung,
+    ]);
+
+    $assessmentData = array_intersect_key(
+        $assessment->getAttributes(),
+        array_flip($assessment->getFillable())
+    );
+    $assessmentData['client_id'] = $client->id;
+    ClientAssessment::create($assessmentData);
+
+    return $client;
+});
+
+$admins = \App\Models\User::role(['admin', 'super-admin'])->get();
+\Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\KlienBaruMasuk($client));
+
+return redirect()->route('assessment.create', $client)
+    ->with('success', 'Data klien lama berhasil digunakan. Periksa dan perbarui penilaian untuk layanan baru.');
     }
 
     public function update(Request $request, Client $client)

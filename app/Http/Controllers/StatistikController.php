@@ -186,14 +186,22 @@ class StatistikController extends Controller
         // 4. Kategori PPKS
         // Dipindah dari problem_awal ke kategori_ppks: problem_awal sekarang teks bebas
         // (sesuai field 6 dokumen), tidak lagi cocok dikelompokkan untuk grafik ini.
-        $kategoriBreakdown = Client::select('kategori_ppks', DB::raw('count(*) as total'))
-            ->whereNotNull('kategori_ppks')
-            ->where('kategori_ppks', '!=', '')
-            ->groupBy('kategori_ppks')
-            ->orderByDesc('total')
-            ->get();
+        $kategoriCounts = [];
+        $totalDenganKategori = 0;
+        Client::whereNotNull('kategori_ppks')->pluck('kategori_ppks')->each(function ($value) use (&$kategoriCounts, &$totalDenganKategori) {
+            $categories = Client::parseKategoriPpks($value);
+            if ($categories !== []) {
+                $totalDenganKategori++;
+            }
 
-        $totalDenganKategori = $kategoriBreakdown->sum('total');
+            foreach ($categories as $category) {
+                $kategoriCounts[$category] = ($kategoriCounts[$category] ?? 0) + 1;
+            }
+        });
+        $kategoriBreakdown = collect($kategoriCounts)
+            ->map(fn ($total, $category) => (object) ['kategori_ppks' => $category, 'total' => $total])
+            ->sortByDesc('total')
+            ->values();
         $totalTanpaKategori = $totalKlien - $totalDenganKategori;
 
         // 5. Rata-rata lama penanganan (untuk klien yang sudah Selesai/Dirujuk)

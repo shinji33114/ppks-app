@@ -297,6 +297,18 @@ a:hover {
     color: #FFFFFF;
 }
 
+.sidebar-submenu-link.active {
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.sidebar-submenu-link.active::before {
+    content: '•';
+    margin-left: -0.8rem;
+    margin-right: 0.45rem;
+    color: var(--brand-lime);
+}
+
 /* Bottom Profile Card in Sidebar */
 .sidebar-profile {
     margin-top: auto;

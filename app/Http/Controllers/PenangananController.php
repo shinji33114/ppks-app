@@ -61,7 +61,7 @@ class PenangananController extends Controller
             $client->update(['status' => 'penanganan']);
         }
 
-        return redirect()->route('penanganan.index', $client->id)
+        return redirect()->route('penanganan.index', $client->id)->withFragment('exit-document-form')
                           ->with('success', 'Catatan kegiatan berhasil disimpan.');
     }
 

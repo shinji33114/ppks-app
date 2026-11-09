@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Client;
+use App\Models\ClientExitDocument;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 
@@ -117,6 +118,41 @@ it('shows client search only on the client list above the table', function () {
         ->assertSee('value="Nama Klien Dicari"', false)
         ->assertSee('Nama Klien Dicari')
         ->assertDontSee('Klien Lain');
+});
+
+it('provides registration and published letter download actions from the client list', function () {
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $client = Client::create([
+        'tanggal_masuk' => '2026-09-20',
+        'sumber_aduan' => 'Laporan warga',
+        'tkp_kronologi' => 'Ditemukan di area publik.',
+        'nama_lengkap' => 'Klien dengan Surat',
+        'status' => Client::STATUS_DIRUJUK,
+        'is_archived' => true,
+    ]);
+    $document = ClientExitDocument::create([
+        'client_id' => $client->id,
+        'created_by' => $admin->id,
+        'type' => 'rujukan',
+        'status' => 'selesai',
+        'nomor_surat' => '001/2026',
+        'tanggal_surat' => '2026-09-20',
+        'tujuan' => 'Panti Sosial',
+        'tanggal_keluar' => '2026-09-20',
+        'no_hp_penanggung_jawab' => '08123456789',
+        'pdf_path' => 'exit-documents/1.pdf',
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('clients.index'))
+        ->assertOk()
+        ->assertSee(route('clients.create'), false)
+        ->assertSee('Daftarkan Penerima')
+        ->assertSee(route('exit-documents.pdf', $document), false)
+        ->assertSee('Unduh surat rujukan untuk Klien dengan Surat');
 });
 
 it('offers a direct assessment action below the photo on eligible client details only', function () {

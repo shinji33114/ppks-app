@@ -45,15 +45,11 @@ class AssessmentController extends Controller
      */
     private function rules(Client $client): array
     {
-        $nikUnique = Rule::unique('client_assessments', 'nik');
-        if ($client->assessment) {
-            $nikUnique->ignore($client->assessment->getKey());
-        }
-
         return [
             // C1: Admin boleh memperbarui identitas (nama, NIK, alamat KTP)
             'nama_lengkap' => 'required|string|max:255',
-            'nik' => ['required', 'digits:16', $nikUnique],
+            // NIK boleh muncul pada beberapa episode layanan klien yang sama.
+            'nik' => ['required', 'digits:16'],
             'tempat_lahir' => 'required|string|max:255',
             'tanggal_lahir' => 'required|date|before_or_equal:today',
             'umur' => 'required|integer|min:0|max:150',
@@ -112,7 +108,6 @@ class AssessmentController extends Controller
             'pendidikan_terakhir.in' => 'Pendidikan terakhir harus dipilih dari daftar, atau pilih "- Tidak diketahui -".',
             'required' => ':attribute wajib diisi. Isi dengan tanda "-" jika data tidak ada.',
             'nik.digits' => 'NIK harus terdiri dari tepat 16 digit angka, atau isi tanda "-" jika tidak ada.',
-            'nik.unique' => 'NIK sudah digunakan oleh data klien lain.',
         ];
     }
 
@@ -176,7 +171,19 @@ class AssessmentController extends Controller
             $client->update(['locked_at' => now()]);
         }
 
-        return view('assessments.create', ['client' => $client, 'assessment' => null]);
+        $previousAssessment = filled($client->assessment?->nik)
+            ? ClientAssessment::where('nik', $client->assessment->nik)
+                ->where('client_id', '!=', $client->id)
+                ->latest('id')
+                ->first()
+            : null;
+        $assessment = $previousAssessment ?? $client->assessment;
+
+        return view('assessments.create', [
+            'client' => $client,
+            'assessment' => $assessment,
+            'isEditingAssessment' => false,
+        ]);
     }
 
     /**
@@ -209,8 +216,8 @@ class AssessmentController extends Controller
 
         User::role(['admin', 'super-admin'])->each(fn (User $admin) => $admin->notify(new AssessmentSelesai($client)));
 
-        return redirect()->route('clients.show', $client->id)
-            ->with('success', 'Hasil penilaian berhasil disimpan.');
+        return redirect()->route('penanganan.index', $client->id)
+            ->with('success', 'Hasil penilaian berhasil disimpan. Lanjutkan ke tahap pendampingan.');
     }
 
     /**
@@ -223,7 +230,11 @@ class AssessmentController extends Controller
                 ->with('error', 'Hasil penilaian tidak dapat diubah karena layanan sudah dilanjutkan, data ditutup, atau penilaian belum dilakukan.');
         }
 
-        return view('assessments.create', ['client' => $client, 'assessment' => $client->assessment]);
+        return view('assessments.create', [
+            'client' => $client,
+            'assessment' => $client->assessment,
+            'isEditingAssessment' => true,
+        ]);
     }
 
     /**

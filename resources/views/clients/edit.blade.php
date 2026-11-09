@@ -44,17 +44,7 @@
                        class="form-control-custom" required placeholder="Nama panggilan lain. Isi - jika tidak ada">
             </div>
 
-            <div class="mb-3">
-                <label class="form-label-custom">Jenis kebutuhan layanan (PPKS)</label>
-                @php($kategoriTerpilih = old('kategori_ppks', $client->kategori_ppks))
-                <select name="kategori_ppks" class="form-control-custom" required>
-                    <option value="">- Pilih -</option>
-                    <option value="-" @selected($kategoriTerpilih === '-' || $kategoriTerpilih === null)>- Tidak diketahui -</option>
-                    @foreach (\App\Models\Client::KATEGORI_PPKS as $kategori)
-                        <option value="{{ $kategori }}" @selected($kategoriTerpilih === $kategori)>{{ $kategori }}</option>
-                    @endforeach
-                </select>
-            </div>
+            @include('components.category-selector', ['selected' => $client->kategoriPpksList() ?: ['-']])
 
             <div class="mb-3">
                 <label class="form-label-custom">Masalah atau kebutuhan awal</label>
