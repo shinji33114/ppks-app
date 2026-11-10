@@ -18,9 +18,11 @@
                     <x-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
                         Data Penerima Layanan
                     </x-nav-link>
-                    <x-nav-link :href="route('clients.create')" :active="request()->routeIs('clients.create')">
-                        Pendaftaran Baru
-                    </x-nav-link>
+                    @hasanyrole('admin|super-admin')
+                        <x-nav-link :href="route('clients.create')" :active="request()->routeIs('clients.create')">
+                            Pendaftaran Baru
+                        </x-nav-link>
+                    @endhasanyrole
                     <x-nav-link :href="route('assessment.index')" :active="request()->routeIs('assessment.*')">
                         Penilaian
                     </x-nav-link>
@@ -93,6 +95,11 @@
             <x-responsive-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.*')">
                 Data Penerima Layanan
             </x-responsive-nav-link>
+            @hasanyrole('admin|super-admin')
+                <x-responsive-nav-link :href="route('clients.create')" :active="request()->routeIs('clients.create')">
+                    Pendaftaran Baru
+                </x-responsive-nav-link>
+            @endhasanyrole
             <x-responsive-nav-link :href="route('assessment.index')" :active="request()->routeIs('assessment.*')">
                 Penilaian
             </x-responsive-nav-link>

@@ -3,17 +3,20 @@
 use App\Models\Client;
 use App\Models\ClientAssessment;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
 });
 
 function makeUser(string $role, array $attrs = []): User
 {
     // is_active diisi eksplisit: default true hanya ada di database, tidak di objek model yang baru dibuat
     $user = User::factory()->create(array_merge(['is_active' => true], $attrs));
-    $user->assignRole('admin');
+    $user->assignRole('super-admin');
 
     return $user;
 }
@@ -85,7 +88,7 @@ it('A1: assessment normal untuk klien draft tetap berhasil', function () {
         ->post(route('assessment.store', $client), assessmentPayload())
         ->assertSessionHasNoErrors();
 
-    expect($client->refresh()->status)->toBe(Client::STATUS_ASSESSMENT)
+    expect($client->refresh()->status)->toBe(Client::STATUS_PENANGANAN)
         ->and(ClientAssessment::count())->toBe(1);
 });
 
@@ -116,6 +119,63 @@ it('A2: catatan tindakan untuk klien siap ditangani tetap berhasil', function ()
 
     expect($client->followups()->count())->toBe(1)
         ->and($client->refresh()->status)->toBe(Client::STATUS_PENANGANAN);
+});
+
+it('allows admins to enter assessments and activity while keeping edits restricted', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $draftClient = makeClient(['status' => Client::STATUS_DRAFT]);
+    $handlingClient = makeClient(['status' => Client::STATUS_ASSESSMENT]);
+
+    $this->actingAs($admin)
+        ->get(route('assessment.create', $draftClient))
+        ->assertOk();
+    $this->actingAs($admin)
+        ->post(route('assessment.store', $draftClient), assessmentPayload())
+        ->assertSessionHasNoErrors();
+    $this->actingAs($admin)
+        ->post(route('penanganan.store', $handlingClient), [
+            'tanggal_tindakan' => '2026-09-25',
+            'catatan_tindakan' => 'Pendampingan dicatat admin.',
+        ])
+        ->assertSessionHasNoErrors();
+
+    $this->actingAs($admin)
+        ->get(route('penanganan.index', $handlingClient))
+        ->assertOk()
+        ->assertSee('Tambah catatan kegiatan')
+        ->assertSee('Simpan catatan');
+
+    expect($draftClient->refresh()->locked_at)->not->toBeNull()
+        ->and($draftClient->status)->toBe(Client::STATUS_PENANGANAN)
+        ->and($handlingClient->followups()->count())->toBe(1);
+});
+
+it('A2: menyimpan foto bukti kegiatan dan menampilkannya di riwayat', function () {
+    Storage::fake('local');
+    $admin = makeUser('admin');
+    $client = makeClient(['status' => Client::STATUS_ASSESSMENT]);
+
+    $this->actingAs($admin)
+        ->post(route('penanganan.store', $client), [
+            'tanggal_tindakan' => '2026-09-25',
+            'catatan_tindakan' => 'Pendampingan di lokasi.',
+            'foto_kegiatan' => UploadedFile::fake()->create('kegiatan.jpg', 100, 'image/jpeg'),
+        ])
+        ->assertSessionHasNoErrors();
+
+    $followup = $client->followups()->firstOrFail();
+    expect($followup->foto_kegiatan)->not->toBeNull();
+    Storage::disk('local')->assertExists($followup->foto_kegiatan);
+
+    $this->actingAs($admin)
+        ->get(route('clients.followups.photo', [$client, $followup]))
+        ->assertOk();
+
+    $this->actingAs($admin)
+        ->get(route('penanganan.index', $client))
+        ->assertOk()
+        ->assertSee(route('clients.followups.photo', [$client, $followup]));
 });
 
 // ---------------------------------------------------------------- A3

@@ -11,9 +11,9 @@
     ];
     $stepLinks = [
         $client ? route('clients.show', $client) : null,
-        $client && ! $client->is_archived && $client->status === \App\Models\Client::STATUS_DRAFT
+        $client && auth()->user()->hasAnyRole(['admin', 'super-admin']) && ! $client->is_archived && $client->status === \App\Models\Client::STATUS_DRAFT
             ? route('assessment.create', $client)
-            : ($client && ! $client->is_archived && $client->status === \App\Models\Client::STATUS_ASSESSMENT ? route('assessment.edit', $client) : null),
+            : ($client && auth()->user()->hasRole('super-admin') && ! $client->is_archived && $client->status === \App\Models\Client::STATUS_ASSESSMENT ? route('assessment.edit', $client) : null),
         $client && ! $client->is_archived && in_array($client->status, [\App\Models\Client::STATUS_ASSESSMENT, \App\Models\Client::STATUS_PENANGANAN], true)
             ? route('penanganan.index', $client)
             : null,

@@ -23,7 +23,7 @@ Melalui website ini, petugas dapat:
 4. Pada halaman masuk, ketik alamat email dan kata sandi akun Anda.
 5. Tekan tombol **Masuk**. Setelah berhasil, halaman utama akan terbuka.
 
-Setiap pengguna harus memakai akun sendiri. Jika belum memiliki akun atau akun tidak dapat digunakan, hubungi Admin. Jangan membagikan kata sandi kepada orang lain.
+Setiap pengguna harus memakai akun sendiri. Admin dapat mengisi pendaftaran, assessment, catatan kegiatan, dan surat keluar/rujukan. Hanya Super Admin yang dapat mengubah data yang sudah tersimpan atau memperbaiki surat/revisi data. Jika belum memiliki akun atau akun tidak dapat digunakan, hubungi Admin. Jangan membagikan kata sandi kepada orang lain.
 
 ### Kredensial Admin dan Super Admin
 
@@ -46,12 +46,14 @@ Gunakan tautan **Lupa kata sandi** pada halaman masuk jika tersedia dan ikuti pe
 
 ### Alur pelayanan secara umum
 
-1. **Tahap 1 — Registrasi Awal:** Admin mencatat informasi dan dokumen awal klien.
-2. **Tahap 2 — Assessment:** Admin melengkapi assessment klien yang menunggu.
-3. **Tahap 3 — Penanganan:** Admin mencatat rencana dan perkembangan pelayanan.
-4. **Penyelesaian atau rujukan:** Admin menerbitkan surat keluar atau rujukan. Klien langsung ditandai selesai/dirujuk dan surat dapat dilihat, dicetak, serta diunduh tanpa tahap persetujuan.
+1. **Tahap 1 — Registrasi Awal:** Super Admin mencatat informasi dan dokumen awal klien.
+2. **Tahap 2 — Assessment:** Super Admin melengkapi assessment klien yang menunggu.
+3. **Tahap 3 — Penanganan:** Setelah assessment berhasil disimpan, klien langsung masuk tahap pendampingan dan tampil pada daftar Pendampingan. Super Admin kemudian mencatat kegiatan dan perkembangan pelayanan.
+4. **Penyelesaian atau rujukan:** Super Admin menerbitkan surat keluar atau rujukan. Klien langsung ditandai selesai/dirujuk dan surat dapat dilihat, dicetak, serta diunduh tanpa tahap persetujuan.
 
 Satu akun dapat menjalankan semua tahap, tetapi urutan dan aturan status tetap berlaku. Contohnya, assessment hanya dapat dimulai untuk klien yang masih berstatus draft; data Tahap 1 terkunci setelah assessment dimulai; dan catatan penanganan tidak dapat ditambahkan setelah klien diarsipkan.
+
+Pada formulir Tahap 1, lokasi dan cerita kejadian tetap diisi secara manual. Titik koordinat dapat ditambahkan dengan mengetik latitude/longitude, menggunakan GPS perangkat, atau memilih dan menggeser penanda di peta. Peta interaktif tetap tersedia tanpa API key melalui OpenStreetMap; jika `GOOGLE_MAPS_API_KEY` sudah dikonfigurasi untuk Google Maps JavaScript API, peta Google Maps akan digunakan. Izin lokasi browser diperlukan untuk GPS dan biasanya browser juga mensyaratkan website berjalan melalui HTTPS. Foto penerima layanan dapat diunggah seperti biasa atau diambil langsung dari kamera perangkat; pada perangkat dengan beberapa kamera, petugas dapat memilih kamera yang digunakan. Akses kamera biasanya memerlukan HTTPS atau localhost dan izin kamera dari browser. Pada Tahap 3 — Pendampingan, petugas dapat melampirkan foto bukti (opsional, maksimal 5 MB) di setiap catatan kegiatan. Foto tersimpan secara privat dan dapat dilihat pada riwayat kegiatan.
 
 ### Menggunakan halaman Data Klien, Assessment, dan Penanganan
 

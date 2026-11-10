@@ -27,6 +27,10 @@
 @endphp
 @include('components.client-workflow-stepper', ['client' => $client, 'currentStep' => $currentStep])
 
+@unless (auth()->user()->hasRole('super-admin'))
+    <div class="alert alert-info small">Admin dapat mengisi data baru. Perubahan data yang sudah tersimpan hanya dapat dilakukan oleh Super Admin.</div>
+@endunless
+
 <div class="row g-4">
 
     {{-- ================= KARTU RINGKASAN & AKSI ================= --}}
@@ -58,21 +62,21 @@
             <span class="badge-table {{ $client->status_badge_class }} d-inline-flex mb-3">{{ $client->status_label }}</span>
 
             @unless ($isClosedCase)
-                @hasanyrole('admin|super-admin')
-                    @if ($client->status === 'assessment')
+                @role('super-admin')
+                    @if (in_array($client->status, ['assessment', 'penanganan'], true) && $client->followups()->doesntExist())
                         <a href="{{ route('assessment.edit', $client->id) }}" class="btn-custom btn-custom-primary w-100 mb-2">
                             <i class="bi bi-pencil-square me-1"></i> Ubah Hasil Penilaian
                         </a>
                     @endif
-                @endhasanyrole
+                @endrole
 
-                @hasanyrole('admin|super-admin')
+                @role('super-admin')
                     @if ($client->isStageOneEditable())
                         <a href="{{ route('clients.edit', $client) }}" class="btn-custom btn-custom-secondary w-100 mb-2">
                             <i class="bi bi-pencil me-1"></i> Ubah Data Pendaftaran
                         </a>
                     @endif
-                @endhasanyrole
+                @endrole
 
                 @hasanyrole('admin|super-admin')
                     @if (in_array($client->status, ['assessment', 'penanganan']))
@@ -83,13 +87,13 @@
                 @endhasanyrole
             @endunless
 
-            @hasanyrole('admin|super-admin')
+            @role('super-admin')
                 @if ($isClosedCase)
         <a href="{{ route('clients.revisi.edit', $client->id) }}" class="btn-custom btn-custom-secondary w-100 mb-2">
             <i class="bi bi-pencil-square me-1"></i> Perbaiki Data
         </a>
     @endif
-@endhasanyrole
+@endrole
         </div>
     </div>
 
@@ -114,6 +118,17 @@
                     <div class="text-muted small">Lokasi dan cerita kejadian</div>
                     <div class="fw-medium">{{ $client->tkp_kronologi }}</div>
                 </div>
+
+                @if ($client->latitude !== null && $client->longitude !== null)
+                    <div class="col-12">
+                        <div class="text-muted small">Titik lokasi ditemukan</div>
+                        <div class="fw-medium">
+                            {{ $client->latitude }}, {{ $client->longitude }}
+                            <a class="small ms-2" href="https://www.google.com/maps/search/?api=1&amp;query={{ urlencode($client->latitude . ',' . $client->longitude) }}"
+                               target="_blank" rel="noopener noreferrer">Buka di Google Maps</a>
+                        </div>
+                    </div>
+                @endif
 
                 <div class="col-md-6">
                     <div class="text-muted small">Jenis kebutuhan layanan</div>
@@ -239,6 +254,13 @@
                             <span class="text-muted small">oleh {{ $log->user->name ?? '—' }}</span>
                         </div>
                         <p class="mb-0 mt-1">{{ $log->catatan_tindakan }}</p>
+                        @if ($log->foto_kegiatan)
+                            <a href="{{ route('clients.followups.photo', [$client, $log]) }}" target="_blank" rel="noopener noreferrer">
+                                <img src="{{ route('clients.followups.photo', [$client, $log]) }}"
+                                     alt="Foto bukti kegiatan {{ \Carbon\Carbon::parse($log->tanggal_tindakan)->translatedFormat('d F Y') }}"
+                                     class="img-thumbnail mt-2" style="max-width: 240px; max-height: 180px; object-fit: cover;">
+                            </a>
+                        @endif
                     </div>
                 @endforeach
             @endif

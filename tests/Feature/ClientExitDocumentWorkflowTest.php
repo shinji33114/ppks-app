@@ -8,12 +8,13 @@ use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
 });
 
 function exitTestUser(string $role): User
 {
     $user = User::factory()->create();
-    $user->assignRole('admin');
+    $user->assignRole($role === 'admin-rps' ? 'super-admin' : 'admin');
 
     return $user;
 }
@@ -116,6 +117,32 @@ it('allows an old rejected letter to be corrected and directly published', funct
         ->and($client->archived_by)->toBe($admin->id)
         ->and($client->archived_at)->not->toBeNull();
 
+});
+
+it('allows ordinary admins to create exit documents but not correct existing ones', function () {
+    Storage::fake('local');
+    $admin = exitTestUser('ordinary-admin');
+    $client = exitTestClient();
+    $document = ClientExitDocument::create(array_merge(exitDocumentPayload(), [
+        'client_id' => $client->id,
+        'created_by' => $admin->id,
+        'status' => 'ditolak',
+        'catatan_penolakan' => 'Perlu diperbaiki.',
+    ]));
+    $newClient = exitTestClient();
+
+    $this->actingAs($admin)
+        ->post(route('exit-documents.store', $newClient), exitDocumentPayload([
+            'nomor_surat' => '002/RPS/IX/2026',
+        ]))
+        ->assertSessionHasNoErrors();
+    $this->actingAs($admin)->get(route('exit-documents.edit', $document))->assertForbidden();
+    $this->actingAs($admin)
+        ->patch(route('exit-documents.resubmit', $document), exitDocumentPayload())
+        ->assertForbidden();
+
+    expect(ClientExitDocument::where('client_id', $client->id)->count())->toBe(1)
+        ->and(ClientExitDocument::where('client_id', $newClient->id)->count())->toBe(1);
 });
 
 it('allows admins to print and download the PDF immediately after publication', function () {

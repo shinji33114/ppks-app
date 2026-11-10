@@ -36,6 +36,11 @@
                     <label class="form-label-custom">Lokasi dan cerita kejadian</label>
                     <textarea name="tkp_kronologi" rows="3" class="form-control-custom" required>{{ old('tkp_kronologi', $client->tkp_kronologi) }}</textarea>
                 </div>
+                @include('components.location-picker', [
+                    'prefix' => 'revision_location',
+                    'latitude' => $client->latitude,
+                    'longitude' => $client->longitude,
+                ])
                 <div class="mb-3">
                     <label class="form-label-custom">Masalah atau kebutuhan awal</label>
                     <input type="text" name="problem_awal" value="{{ old('problem_awal', $client->problem_awal) }}" class="form-control-custom">

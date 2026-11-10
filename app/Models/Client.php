@@ -40,6 +40,8 @@ class Client extends Model
         'tanggal_masuk',
         'sumber_aduan',
         'tkp_kronologi',
+        'latitude',
+        'longitude',
         'kondisi_fisik',
         'problem_awal',
         'kategori_ppks',
@@ -74,7 +76,7 @@ class Client extends Model
     // Status ditampilkan dengan istilah sederhana untuk pengguna.
     return [
         self::STATUS_DRAFT => 'Baru diterima',
-        self::STATUS_ASSESSMENT => 'Menunggu penilaian',
+        self::STATUS_ASSESSMENT => 'Siap didampingi',
         self::STATUS_PENANGANAN => 'Sedang didampingi',
         self::STATUS_SELESAI => 'Selesai',
         self::STATUS_DIRUJUK => 'Dirujuk',

@@ -35,7 +35,9 @@ class AssessmentController extends Controller
      */
     private function canEditAssessment(Client $client): bool
     {
-        return ! $client->is_archived && $client->status === Client::STATUS_ASSESSMENT;
+        return ! $client->is_archived
+            && in_array($client->status, [Client::STATUS_ASSESSMENT, Client::STATUS_PENANGANAN], true)
+            && ! $client->followups()->exists();
     }
 
     /**
@@ -206,7 +208,7 @@ class AssessmentController extends Controller
         ClientAssessment::updateOrCreate(['client_id' => $client->id], $validated);
 
         $clientData = [
-            'status' => Client::STATUS_ASSESSMENT,
+            'status' => Client::STATUS_PENANGANAN,
             'locked_at' => $client->locked_at ?? now(),
         ];
         if (filled($namaLengkap) && trim($namaLengkap) !== '-') {

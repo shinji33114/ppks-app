@@ -8,7 +8,7 @@ beforeEach(function () {
     Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
 });
 
-it('allows admin and super admin to use workflow areas but restricts account management to super admin', function () {
+it('allows admin and super admin to view workflow areas but restricts changes to super admin', function () {
     $admin = User::factory()->create();
     $admin->assignRole('admin');
     $superAdmin = User::factory()->create();
@@ -16,7 +16,6 @@ it('allows admin and super admin to use workflow areas but restricts account man
 
     foreach ([
         'clients.index',
-        'clients.create',
         'assessment.index',
         'penanganan.dashboard',
         'exit-documents.mine',
@@ -24,6 +23,10 @@ it('allows admin and super admin to use workflow areas but restricts account man
         $this->actingAs($admin)->get(route($route))->assertOk();
         $this->actingAs($superAdmin)->get(route($route))->assertOk();
     }
+
+    $this->actingAs($admin)->get(route('clients.create'))->assertOk();
+    $this->actingAs($superAdmin)->get(route('clients.create'))->assertOk();
+    $this->actingAs($admin)->get(route('clients.index'))->assertSee('Daftarkan Penerima');
 
     $this->actingAs($admin)->get(route('users.index'))->assertForbidden();
     $this->actingAs($admin)->get(route('users.create'))->assertForbidden();

@@ -30,13 +30,14 @@
 <div class="row g-4">
 
     <div class="col-lg-7">
+        @hasanyrole('admin|super-admin')
         <div class="card border-light shadow-sm p-4 mb-4 handling-card handling-entry-card">
             <div class="handling-card-heading">
                 <span class="handling-card-icon"><i class="bi bi-journal-plus"></i></span>
                 <div><h5>Tambah catatan kegiatan</h5><p>Catat kegiatan atau bantuan yang sudah diberikan.</p></div>
             </div>
 
-            <form method="POST" action="{{ route('penanganan.store', $client->id) }}">
+            <form method="POST" action="{{ route('penanganan.store', $client->id) }}" enctype="multipart/form-data">
                 @csrf
                 <div class="row g-3">
                     <div class="col-md-4">
@@ -53,14 +54,19 @@
                         @error('catatan_tindakan') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                     </div>
                 </div>
+                <div class="mt-3">
+                    <label for="foto_kegiatan" class="form-label-custom">Foto bukti kegiatan <span class="text-muted small">(opsional)</span></label>
+                    <input type="file" name="foto_kegiatan" id="foto_kegiatan" accept="image/*"
+                           class="form-control-custom @error('foto_kegiatan') is-invalid-custom @enderror">
+                    <div class="text-muted small mt-1">Unggah foto kegiatan, maksimal 5 MB.</div>
+                    @error('foto_kegiatan') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                </div>
                 <button type="submit" class="btn-custom btn-custom-primary mt-3">
                     <i class="bi bi-plus-lg me-1"></i> Simpan catatan
                 </button>
             </form>
-            <a href="#exit-document-form" class="btn-custom btn-custom-secondary mt-3">
-                Lanjut ke surat keluar / rujukan <i class="bi bi-arrow-down ms-1"></i>
-            </a>
         </div>
+        @endhasanyrole
 
         <div class="card border-light shadow-sm p-4 handling-card">
             <div class="handling-card-heading">
@@ -78,6 +84,13 @@
                             <span class="text-muted small"><i class="bi bi-person me-1"></i>{{ $log->user->name ?? 'Tidak diketahui' }}</span>
                         </div>
                         <p>{{ $log->catatan_tindakan }}</p>
+                        @if ($log->foto_kegiatan)
+                            <a href="{{ route('clients.followups.photo', [$client, $log]) }}" target="_blank" rel="noopener noreferrer">
+                                <img src="{{ route('clients.followups.photo', [$client, $log]) }}"
+                                     alt="Foto bukti kegiatan {{ \Carbon\Carbon::parse($log->tanggal_tindakan)->translatedFormat('d F Y') }}"
+                                     class="img-thumbnail mt-1" style="max-width: 240px; max-height: 180px; object-fit: cover;">
+                            </a>
+                        @endif
                     </div>
                 </div>
             @empty
@@ -101,6 +114,7 @@
                 Setelah surat dibuat, layanan akan ditutup. Surat dapat langsung dilihat, dicetak, dan diunduh.
             </div>
 
+            @hasanyrole('admin|super-admin')
             <form method="POST" action="{{ route('exit-documents.store', $client->id) }}">
                 @csrf
 
@@ -166,6 +180,7 @@
                     <i class="bi bi-send me-1"></i> Buat surat
                 </button>
             </form>
+            @endhasanyrole
         </div>
     </div>
 

@@ -122,8 +122,9 @@ it('shows client search only on the client list above the table', function () {
 
 it('provides registration and published letter download actions from the client list', function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
     $admin = User::factory()->create();
-    $admin->assignRole('admin');
+    $admin->assignRole('super-admin');
 
     $client = Client::create([
         'tanggal_masuk' => '2026-09-20',
@@ -157,9 +158,10 @@ it('provides registration and published letter download actions from the client 
 
 it('offers a direct assessment action below the photo on eligible client details only', function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
 
     $admin = User::factory()->create();
-    $admin->assignRole('admin');
+    $admin->assignRole('super-admin');
 
     $draftClient = Client::create([
         'tanggal_masuk' => '2026-09-20',

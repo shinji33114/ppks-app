@@ -31,6 +31,11 @@
                 <textarea name="tkp_kronologi" rows="5" class="form-control-custom"
                           required>{{ old('tkp_kronologi', $client->tkp_kronologi) }}</textarea>
             </div>
+            @include('components.location-picker', [
+                'prefix' => 'edit_location',
+                'latitude' => $client->latitude,
+                'longitude' => $client->longitude,
+            ])
 
             <div class="mb-3">
                 <label class="form-label-custom">Nama Lengkap</label>
@@ -58,13 +63,11 @@
                           placeholder="Contoh: Tampak kurus, ada luka lecet di lengan. Isi - jika tidak ada">{{ old('kondisi_fisik', $client->kondisi_fisik) }}</textarea>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label-custom">Foto Penerima Layanan{{ $client->foto_klien ? ' (unggah hanya jika ingin mengganti)' : '' }}</label>
-                <input type="file" name="foto_klien" accept="image/*" class="form-control-custom" @required(! $client->foto_klien)>
-                @if ($client->foto_klien)
-                    <div class="text-muted small mt-1">Foto saat ini sudah tersimpan. Unggah foto baru hanya jika ingin menggantinya.</div>
-                @endif
-            </div>
+            @include('components.photo-capture', [
+                'prefix' => 'edit_photo',
+                'required' => ! $client->foto_klien,
+                'existingPhoto' => $client->foto_klien,
+            ])
 
             <div class="mb-4">
                 <label class="form-label-custom">Dokumen Pendukung{{ $client->data_dukung ? ' (unggah hanya jika ingin mengganti)' : '' }}</label>

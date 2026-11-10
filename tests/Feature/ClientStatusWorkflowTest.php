@@ -7,11 +7,12 @@ use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
 });
 
 it('closes the case and publishes the letter as soon as it is submitted', function () {
     $admin = User::factory()->create();
-    $admin->assignRole('admin');
+    $admin->assignRole('super-admin');
 
     $client = Client::create([
         'tanggal_masuk' => '2026-09-20',

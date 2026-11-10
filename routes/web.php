@@ -37,10 +37,11 @@ Route::middleware(['auth', 'role:admin|super-admin'])->group(function () {
 
     Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
     Route::get('/clients/create', [ClientController::class, 'create'])->name('clients.create');
+    Route::get('/clients/reuse', fn () => redirect()->route('clients.create'));
     Route::post('/clients', [ClientController::class, 'store'])->name('clients.store');
     Route::post('/clients/reuse', [ClientController::class, 'reuse'])->name('clients.reuse');
-    Route::get('/clients/{client}/edit', [ClientController::class, 'edit'])->name('clients.edit');
-    Route::patch('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
+    Route::get('/clients/{client}/edit', [ClientController::class, 'edit'])->middleware('role:super-admin')->name('clients.edit');
+    Route::patch('/clients/{client}', [ClientController::class, 'update'])->middleware('role:super-admin')->name('clients.update');
     Route::get('/clients/{client}', [ClientController::class, 'show'])->name('clients.show');
     Route::get('/clients/{client}/foto', [ClientController::class, 'photo'])->name('clients.photo');
     Route::get('/clients/{client}/dokumen', [ClientController::class, 'document'])->name('clients.document');
@@ -48,19 +49,23 @@ Route::middleware(['auth', 'role:admin|super-admin'])->group(function () {
     Route::get('/assessment', [AssessmentController::class, 'index'])->name('assessment.index');
     Route::get('/clients/{client}/assessment', [AssessmentController::class, 'create'])->name('assessment.create');
     Route::post('/clients/{client}/assessment', [AssessmentController::class, 'store'])->name('assessment.store');
-    Route::get('/clients/{client}/assessment/edit', [AssessmentController::class, 'edit'])->name('assessment.edit');
-    Route::put('/clients/{client}/assessment', [AssessmentController::class, 'update'])->name('assessment.update');
+    Route::get('/clients/{client}/assessment/edit', [AssessmentController::class, 'edit'])->middleware('role:super-admin')->name('assessment.edit');
+    Route::put('/clients/{client}/assessment', [AssessmentController::class, 'update'])->middleware('role:super-admin')->name('assessment.update');
 
     Route::get('/penanganan', [PenangananController::class, 'dashboard'])->name('penanganan.dashboard');
     Route::get('/clients/{client}/penanganan', [PenangananController::class, 'index'])->name('penanganan.index');
     Route::post('/clients/{client}/penanganan', [PenangananController::class, 'store'])->name('penanganan.store');
+    Route::get('/clients/{client}/followups/{followup}/foto', [PenangananController::class, 'photo'])
+        ->name('clients.followups.photo');
 
     Route::post('/clients/{client}/exit-document', [ClientExitDocumentController::class, 'store'])
         ->name('exit-documents.store');
     Route::get('/exit-documents/mine', [ClientExitDocumentController::class, 'mine'])->name('exit-documents.mine');
     Route::get('/exit-documents/{document}/edit', [ClientExitDocumentController::class, 'edit'])
+        ->middleware('role:super-admin')
         ->name('exit-documents.edit');
     Route::patch('/exit-documents/{document}/resubmit', [ClientExitDocumentController::class, 'resubmit'])
+        ->middleware('role:super-admin')
         ->name('exit-documents.resubmit');
     Route::get('/exit-documents/{document}/pdf', [ClientExitDocumentController::class, 'downloadPdf'])
         ->name('exit-documents.pdf');
@@ -69,8 +74,8 @@ Route::middleware(['auth', 'role:admin|super-admin'])->group(function () {
     Route::get('/exit-documents/{document}', [ClientExitDocumentController::class, 'show'])
         ->name('exit-documents.show');
 
-    Route::get('/clients/{client}/revisi', [ArchiveRevisionController::class, 'edit'])->name('clients.revisi.edit');
-    Route::put('/clients/{client}/revisi', [ArchiveRevisionController::class, 'update'])->name('clients.revisi.update');
+    Route::get('/clients/{client}/revisi', [ArchiveRevisionController::class, 'edit'])->middleware('role:super-admin')->name('clients.revisi.edit');
+    Route::put('/clients/{client}/revisi', [ArchiveRevisionController::class, 'update'])->middleware('role:super-admin')->name('clients.revisi.update');
 
 });
 

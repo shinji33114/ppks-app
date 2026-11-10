@@ -26,6 +26,7 @@ class ClientController extends Controller
             'tanggal_masuk' => ['required', 'date', 'before_or_equal:today'],
             'sumber_aduan' => ['required', 'string', 'max:255'],
             'tkp_kronologi' => ['required', 'string'],
+            ...$this->aturanKoordinat(),
             'nama_lengkap' => ['required', 'string', 'max:255'],
             'nama_alias' => ['required', 'string', 'max:255'],
             'kondisi_fisik' => ['required', 'string'],
@@ -49,6 +50,14 @@ class ClientController extends Controller
         ];
     }
 
+    private function aturanKoordinat(): array
+    {
+        return [
+            'latitude' => ['nullable', 'required_with:longitude', 'numeric', 'between:-90,90', 'decimal:0,7'],
+            'longitude' => ['nullable', 'required_with:latitude', 'numeric', 'between:-180,180', 'decimal:0,7'],
+        ];
+    }
+
     private function pesanTahapSatu(): array
     {
         return [
@@ -65,6 +74,8 @@ class ClientController extends Controller
             'tanggal_masuk' => 'Tanggal masuk',
             'sumber_aduan' => 'Sumber aduan',
             'tkp_kronologi' => 'Kronologi',
+            'latitude' => 'Latitude',
+            'longitude' => 'Longitude',
             'nama_lengkap' => 'Nama lengkap',
             'nama_alias' => 'Nama alias',
             'kondisi_fisik' => 'Kondisi fisik',
@@ -196,7 +207,7 @@ return redirect()->route('assessment.create', $client)
      */
     public function reuse(Request $request)
     {
-$validated = $request->validate([
+    $validated = $request->validate(array_merge([
 'previous_client_id' => [
     'required',
     Rule::exists('clients', 'id')->where(function ($query) {
@@ -212,7 +223,7 @@ $validated = $request->validate([
     'tanggal_masuk' => ['required', 'date', 'before_or_equal:today'],
     'sumber_aduan' => ['required', Rule::in(Client::SUMBER_ADUAN)],
     'tkp_kronologi' => ['required', 'string'],
-], [
+], $this->aturanKoordinat()), [
     'previous_client_id.exists' => 'Data klien yang dipilih tidak memiliki riwayat NIK. Pilih data klien lain.',
 ]);
 
@@ -224,6 +235,8 @@ $client = DB::transaction(function () use ($validated, $previousClient, $assessm
         'tanggal_masuk' => $validated['tanggal_masuk'],
         'sumber_aduan' => $validated['sumber_aduan'],
         'tkp_kronologi' => $validated['tkp_kronologi'],
+        'latitude' => $validated['latitude'] ?? null,
+        'longitude' => $validated['longitude'] ?? null,
         'nama_lengkap' => $previousClient->nama_lengkap,
         'nama_alias' => $previousClient->nama_alias,
         'kondisi_fisik' => $previousClient->kondisi_fisik,

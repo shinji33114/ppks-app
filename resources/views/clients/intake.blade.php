@@ -52,6 +52,11 @@
                     <textarea name="tkp_kronologi" id="reuse_tkp_kronologi" rows="3" class="form-control-custom @error('tkp_kronologi') is-invalid-custom @enderror" required>{{ old('tkp_kronologi') }}</textarea>
                     @error('tkp_kronologi') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 </div>
+                @include('components.location-picker', [
+                    'prefix' => 'reuse_location',
+                    'latitude' => old('latitude'),
+                    'longitude' => old('longitude'),
+                ])
                 <button type="submit" class="btn-custom btn-custom-primary">
                     <i class="bi bi-arrow-repeat me-1"></i> Gunakan data lama & lanjutkan
                 </button>
@@ -105,6 +110,11 @@
                         <div class="text-danger small mt-1">{{ $message }}</div>
                     @enderror
                 </div>
+                @include('components.location-picker', [
+                    'prefix' => 'new_location',
+                    'latitude' => old('latitude'),
+                    'longitude' => old('longitude'),
+                ])
 
                 <div class="mb-3">
                     <label for="nama_lengkap" class="form-label-custom">Nama Lengkap</label>
@@ -146,14 +156,7 @@
               placeholder="Tuliskan masalah atau bantuan yang dibutuhkan. Isi - jika tidak ada">{{ old('problem_awal') }}</textarea>
 </div>
 
-                <div class="mb-4">
-                    <label for="foto_klien" class="form-label-custom">Foto Penerima Layanan <span class="text-danger">*</span></label>
-                    <input type="file" name="foto_klien" id="foto_klien" accept="image/*"
-                           class="form-control-custom @error('foto_klien') is-invalid-custom @enderror" required>
-                    @error('foto_klien')
-                        <div class="text-danger small mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
+                @include('components.photo-capture', ['prefix' => 'intake_photo', 'required' => true])
 
                 <button type="submit" class="btn-custom btn-custom-primary">
                     <i class="bi bi-save me-1"></i> Simpan

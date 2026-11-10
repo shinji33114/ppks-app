@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ClientFollowup extends Model
 {
-    protected $fillable = ['client_id', 'user_id', 'tanggal_tindakan', 'catatan_tindakan'];
+    protected $fillable = ['client_id', 'user_id', 'tanggal_tindakan', 'catatan_tindakan', 'foto_kegiatan'];
 
     public function client()
     {

@@ -46,7 +46,7 @@
 
     {{-- Ringkasan penerima layanan yang sedang didampingi --}}
     @hasanyrole('admin|super-admin')
-        @php($activeCount = \App\Models\Client::whereIn('status', [\App\Models\Client::STATUS_ASSESSMENT, \App\Models\Client::STATUS_PENANGANAN])->count())
+        @php($activeCount = \App\Models\Client::where('status', \App\Models\Client::STATUS_PENANGANAN)->count())
         <div class="col-md-6">
             <div class="card border-light shadow-sm p-4">
                 <div class="d-flex align-items-center gap-3">

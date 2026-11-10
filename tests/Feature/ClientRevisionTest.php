@@ -7,12 +7,13 @@ use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
 });
 
 function arsipRevUser(string $role): User
 {
     $user = User::factory()->create();
-    $user->assignRole('admin');
+    $user->assignRole('super-admin');
 
     return $user;
 }
@@ -81,7 +82,7 @@ it('requires a reason for every revision', function () {
         ->and(ClientRevision::count())->toBe(0);
 });
 
-it('allows an admin to revise archived data', function () {
+it('allows a super admin to revise archived data', function () {
     $client = arsipRevClient();
 
     $this->actingAs(arsipRevUser('admin'))
@@ -93,6 +94,20 @@ it('allows an admin to revise archived data', function () {
         ->assertRedirect(route('clients.show', $client));
 
     expect($client->refresh()->nama_lengkap)->toBe('Diubah');
+});
+
+it('allows only super admins to open and save archived client revisions', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $client = arsipRevClient();
+
+    $this->actingAs($admin)->get(route('clients.revisi.edit', $client))->assertForbidden();
+    $this->actingAs($admin)
+        ->put(route('clients.revisi.update', $client), arsipRevPayload(['nama_lengkap' => 'Tidak boleh berubah']))
+        ->assertForbidden();
+
+    expect($client->refresh()->nama_lengkap)->toBe('Klien Uji')
+        ->and(ClientRevision::count())->toBe(0);
 });
 
 it('does not allow revision of a client that is not archived', function () {

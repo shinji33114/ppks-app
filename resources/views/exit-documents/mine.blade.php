@@ -31,7 +31,11 @@
                                     <a href="{{ route('exit-documents.pdf', ['document' => $document->id, 'v' => $document->updated_at->timestamp]) }}" class="btn btn-sm btn-outline-primary">Unduh surat</a>
                                 @endif
                                 @if ($document->status === 'ditolak')
-                                    <a href="{{ route('exit-documents.edit', $document) }}" class="btn btn-sm btn-warning">Perbaiki data surat</a>
+                                    @role('super-admin')
+                                        <a href="{{ route('exit-documents.edit', $document) }}" class="btn btn-sm btn-warning">Perbaiki data surat</a>
+                                    @else
+                                        <span class="text-muted">Hanya Super Admin yang dapat mengubah data surat</span>
+                                    @endrole
                                 @elseif (! in_array($document->status, ['selesai', 'disetujui'], true) || ! $document->pdf_path)
                                     <span class="text-muted">-</span>
                                 @endif

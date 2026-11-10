@@ -21,6 +21,8 @@ class ArchiveRevisionController extends Controller
         'nama_alias' => 'Nama Alias',
         'sumber_aduan' => 'Sumber Aduan',
         'tkp_kronologi' => 'TKP / Kronologi',
+        'latitude' => 'Latitude',
+        'longitude' => 'Longitude',
         'problem_awal' => 'Kategori PPKS',
         'kondisi_fisik' => 'Kondisi Fisik',
         'rujukan' => 'Rujukan / Tujuan',
@@ -35,6 +37,8 @@ class ArchiveRevisionController extends Controller
             'nama_alias' => 'nullable|string|max:255',
             'sumber_aduan' => 'required|string|max:255',
             'tkp_kronologi' => 'required|string',
+            'latitude' => ['nullable', 'required_with:longitude', 'numeric', 'between:-90,90', 'decimal:0,7'],
+            'longitude' => ['nullable', 'required_with:latitude', 'numeric', 'between:-180,180', 'decimal:0,7'],
             'problem_awal' => 'nullable|string|max:255',
             'kondisi_fisik' => 'nullable|string',
             'rujukan' => 'nullable|string|max:255',
@@ -62,7 +66,7 @@ class ArchiveRevisionController extends Controller
      */
     public function edit(Client $client): View
     {
-        abort_unless(auth()->user()->hasAnyRole(['admin', 'super-admin']), 403);
+        abort_unless(auth()->user()->hasRole('super-admin'), 403);
         abort_unless($this->isClosedCase($client), 404, 'Fitur ini hanya untuk data yang sudah diarsipkan.');
 
         return view('clients.revisi', compact('client'));
@@ -73,7 +77,7 @@ class ArchiveRevisionController extends Controller
      */
     public function update(Request $request, Client $client): RedirectResponse
     {
-        abort_unless(auth()->user()->hasAnyRole(['admin', 'super-admin']), 403);
+        abort_unless(auth()->user()->hasRole('super-admin'), 403);
         abort_unless($this->isClosedCase($client), 404);
 
         $validated = $request->validate($this->rules($client));

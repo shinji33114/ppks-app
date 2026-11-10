@@ -2,6 +2,7 @@
 
 use App\Models\Client;
 use App\Models\ClientAssessment;
+use App\Models\ClientFollowup;
 use App\Models\User;
 use App\Notifications\AssessmentSelesai;
 use Illuminate\Support\Facades\Route;
@@ -9,13 +10,14 @@ use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
 });
 
 // Nama helper diberi awalan "rev" supaya tidak bentrok dengan helper di file tes lain.
 function revUser(string $role): User
 {
     $user = User::factory()->create(['is_active' => true]);
-    $user->assignRole('admin');
+    $user->assignRole('super-admin');
 
     return $user;
 }
@@ -62,7 +64,7 @@ it('B3: assessment berhasil bila data yang tidak ada diisi tanda "-"', function 
     $assessment = ClientAssessment::firstOrFail();
 
     // Field bertipe (NIK, tanggal, angka, pilihan) disimpan NULL; field teks disimpan "-".
-    expect($client->refresh()->status)->toBe(Client::STATUS_ASSESSMENT)
+    expect($client->refresh()->status)->toBe(Client::STATUS_PENANGANAN)
         ->and($client->nama_lengkap)->toBe('Klien Uji') // nama "-" tidak menimpa nama yang sudah ada
         ->and($assessment->nik)->toBeNull()
         ->and($assessment->tanggal_lahir)->toBeNull()
@@ -71,6 +73,16 @@ it('B3: assessment berhasil bila data yang tidak ada diisi tanda "-"', function 
         ->and($assessment->kategori_umur)->toBeNull()
         ->and($assessment->riwayat_masalah)->toBe('-')
         ->and($assessment->simpulan_awal)->toBe('-');
+
+    $this->actingAs($peksos)
+        ->get(route('clients.index', ['stage' => 'penanganan']))
+        ->assertOk()
+        ->assertSee('Klien Uji');
+
+    $this->actingAs($peksos)
+        ->get(route('clients.index', ['stage' => 'assessment']))
+        ->assertOk()
+        ->assertDontSee('<div class="client-name-primary">Klien Uji</div>', false);
 
     $notification = $admin->notifications()->firstOrFail();
     expect($notification->type)->toBe(AssessmentSelesai::class)
@@ -110,7 +122,7 @@ it('allows an existing NIK to be used in a separate service episode', function (
         ->assertSessionHasNoErrors();
 
     expect(ClientAssessment::count())->toBe(2)
-        ->and($secondClient->refresh()->status)->toBe(Client::STATUS_ASSESSMENT);
+        ->and($secondClient->refresh()->status)->toBe(Client::STATUS_PENANGANAN);
 });
 
 it('mengizinkan NIK "-" pada banyak klien karena disimpan NULL', function () {
@@ -210,7 +222,7 @@ it('C2: revisi assessment memperbarui data tanpa membuat baris baru', function (
 
     expect(ClientAssessment::count())->toBe(1)
         ->and(ClientAssessment::first()->simpulan_awal)->toBe('Simpulan baru.')
-        ->and($client->refresh()->status)->toBe(Client::STATUS_ASSESSMENT)
+        ->and($client->refresh()->status)->toBe(Client::STATUS_PENANGANAN)
         ->and($admin->notifications()->count())->toBe(1);
 });
 
@@ -218,6 +230,11 @@ it('C2: revisi ditolak setelah klien masuk penanganan', function () {
     $peksos = revUser('peksos');
     $client = revClient(['status' => Client::STATUS_PENANGANAN]);
     ClientAssessment::create(['client_id' => $client->id, 'simpulan_awal' => 'Simpulan lama.']);
+    ClientFollowup::create([
+        'client_id' => $client->id,
+        'tanggal_tindakan' => '2026-09-25',
+        'catatan_tindakan' => 'Pendampingan sudah dimulai.',
+    ]);
 
     $this->actingAs($peksos)
         ->get(route('assessment.edit', $client))
@@ -242,7 +259,7 @@ it('C2: revisi ditolak untuk klien yang sudah diarsipkan', function () {
     expect(ClientAssessment::first()->simpulan_awal)->toBe('Simpulan lama.');
 });
 
-it('C2: Admin dapat membuka form edit assessment', function () {
+it('C2: Super Admin dapat membuka form edit assessment sebelum pendampingan dimulai', function () {
     $admin = revUser('admin');
     $client = revClient(['status' => Client::STATUS_ASSESSMENT]);
     ClientAssessment::create(['client_id' => $client->id, 'simpulan_awal' => 'Simpulan lama.']);
